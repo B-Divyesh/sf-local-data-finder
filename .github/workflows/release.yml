@@ -1,0 +1,88 @@
+name: Release desktop apps
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS Apple silicon
+            os: macos-latest
+            target: aarch64-apple-darwin
+            bundles: dmg
+            paths: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          - label: macOS Intel
+            os: macos-latest
+            target: x86_64-apple-darwin
+            bundles: dmg
+            paths: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          - label: Windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: msi,nsis
+            paths: |
+              src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+              src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+          - label: Linux
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundles: appimage,deb
+            paths: |
+              src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+              src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: "${{ matrix.target }}" }
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - name: Test web and core
+        run: npm test
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: ${{ matrix.paths }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish checksummed release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
+      - run: node scripts/release-manifest.mjs release-assets
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v0.1.0' }}
+          name: Local Data Finder ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v0.1.0' }}
+          generate_release_notes: true
+          files: |
+            release-assets/*
+          fail_on_unmatched_files: true

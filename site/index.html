@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071014" />
+    <meta name="description" content="Search years of notes, mail exports, code and documents without uploading your archive." />
+    <title>Local Data Finder — Your archive, searchable on your device</title>
+    <link rel="preload" as="image" href="/assets/archive-landscape-768.webp" type="image/webp" media="(max-width: 760px)" />
+    <link rel="stylesheet" href="/site.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Local Data Finder home"><svg aria-hidden="true" viewBox="0 0 40 40"><path d="M7 9h21M7 20h15M7 31h21"/><circle cx="28" cy="20" r="6"/><path d="m32.5 24.5 5 5"/></svg><span>Local Data Finder</span></a>
+      <nav aria-label="Primary navigation"><a href="#how">How it works</a><a href="#privacy">Privacy</a><a href="#price">Price</a></nav>
+      <a class="header-download" href="#download">Download</a>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <picture class="hero-art">
+          <source media="(max-width: 760px)" srcset="/assets/archive-landscape-768.webp" />
+          <img src="/assets/archive-landscape-1280.webp" width="1280" height="853" alt="Translucent archive layers connected to one highlighted source record by a mint-colored search beam" fetchpriority="high" decoding="async" />
+        </picture>
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> Private retrieval for sprawling archives</p>
+          <h1>Your archive.<br /><em>One honest search.</em></h1>
+          <p class="lede">Find remembered details across years of notes, mail exports, Markdown, HTML and PDFs—without handing your history to a cloud or a chatbot.</p>
+          <div class="download-block" id="download">
+            <a class="download-button" id="primary-download" href="https://github.com/B-Divyesh/sf-local-data-finder/releases/latest"><span><small id="download-kicker">Download for your computer</small><strong id="download-label">View all downloads</strong></span><span aria-hidden="true">↓</span></a>
+            <p id="download-note">Free core search · macOS, Windows and Linux</p>
+          </div>
+          <div class="trust-line"><span>No account</span><span>No telemetry</span><span>Sources stay local</span></div>
+        </div>
+      </section>
+
+      <section class="proof" aria-label="Product principles">
+        <p>Built for the inconvenient truth that your useful history lives in more than one place.</p>
+        <div><strong>5</strong><span>explicit formats</span></div><div><strong>0</strong><span>cloud uploads</span></div><div><strong>1</strong><span>source trail per result</span></div>
+      </section>
+
+      <section class="story" id="how">
+        <div class="section-intro"><p class="eyebrow">Source-grounded by design</p><h2>Recall without surrender.</h2><p>Local Data Finder is an index, not a new home for your information. Point it at the places you choose. It gives every match back with the path and extraction time needed to verify it.</p></div>
+        <ol class="steps">
+          <li><span>01</span><div><h3>Choose the boundaries</h3><p>Add only specific folders or explicit exports. Hidden folders and unsupported files are skipped.</p></div></li>
+          <li><span>02</span><div><h3>Build a local evidence map</h3><p>Text is extracted on-device from Markdown, plain text, HTML, mbox and text-based PDFs. Mail attachments stay closed.</p></div></li>
+          <li><span>03</span><div><h3>Search, inspect, open</h3><p>Filter exact lexical matches, read the surrounding evidence, then open the original local source.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="evidence-demo" aria-labelledby="evidence-title">
+        <div class="demo-search"><span aria-hidden="true">⌕</span><span>decision about the northwind migration</span><kbd>⌘ K</kbd></div>
+        <div class="demo-result"><span class="type">@</span><div><h3 id="evidence-title">Re: Northwind planning notes</h3><p>…the final <mark>decision about the Northwind migration</mark> was to preserve the original export until validation…</p><footer><span>/Archive/Mail/2024-projects.mbox · message 184</span><span>Extracted today, 09:42</span></footer></div><span class="open">Open source ↗</span></div>
+      </section>
+
+      <section class="privacy-section" id="privacy">
+        <div><p class="eyebrow">A deliberate boundary</p><h2>Your private history is not training material.</h2></div>
+        <div class="privacy-grid"><article><span aria-hidden="true">⌂</span><h3>Local by construction</h3><p>Indexing and search happen on your device. The app has no analytics SDK, user account, or corpus API.</p></article><article><span aria-hidden="true">◇</span><h3>Inspectable scope</h3><p>You see every indexed source, its record count, extraction time, and parser errors. Removing it never deletes the original.</p></article><article><span aria-hidden="true">◫</span><h3>Optional encryption</h3><p>The Archive key encrypts extracted text and paths at rest with a password that is never stored.</p></article></div>
+      </section>
+
+      <section class="price-section" id="price">
+        <div><p class="eyebrow">Keep the tool, keep the index</p><h2>One purchase. No archive rent.</h2><p>Core local search is useful for free. An Archive key adds encrypted indexes and unlimited sources for long-running collections.</p></div>
+        <div class="price-card"><p class="price"><span>US</span>$39</p><p>one-time purchase</p><ul><li>Encrypted index at rest</li><li>Unlimited source folders</li><li>All future v1 updates</li><li>Move devices with your license token</li></ul><a class="buy-button" href="https://api.sociobot.in/api/v1/products/local-data-finder/checkout">Buy an Archive key</a><small>Sociobot/Dodo is merchant of record. Refunds are handled there.</small></div>
+      </section>
+
+      <section class="install-section" aria-labelledby="install-title"><p class="eyebrow">Prefer a terminal?</p><h2 id="install-title">Install in one verified step.</h2><div class="commands"><button class="command" data-copy="curl -fsSL https://local-data-finder.sociobot.in/install.sh | sh"><span>macOS / Linux</span><code>curl -fsSL https://local-data-finder.sociobot.in/install.sh | sh</code><b>Copy</b></button><button class="command" data-copy="irm https://local-data-finder.sociobot.in/install.ps1 | iex"><span>Windows PowerShell</span><code>irm https://local-data-finder.sociobot.in/install.ps1 | iex</code><b>Copy</b></button></div><p class="unsigned-note">v0.1 builds are unsigned. macOS may require right-click → Open; Windows may show a SmartScreen notice. Checksums are published with every release.</p></section>
+    </main>
+    <footer class="site-footer"><div class="brand"><svg aria-hidden="true" viewBox="0 0 40 40"><path d="M7 9h21M7 20h15M7 31h21"/><circle cx="28" cy="20" r="6"/><path d="m32.5 24.5 5 5"/></svg><span>Local Data Finder</span></div><p>Private retrieval, grounded in your sources.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-local-data-finder">Source</a></nav><small>© 2026 Param Factory · Hero imagery generated for this product with Azure AI Foundry.</small></footer>
+    <script type="module" src="/site.ts"></script>
+  </body>
+</html>

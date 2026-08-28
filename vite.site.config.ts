@@ -1,0 +1,19 @@
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  root: "site",
+  publicDir: "../public",
+  server: { port: 4173, strictPort: true },
+  build: {
+    outDir: "../dist/site",
+    emptyOutDir: true,
+    target: "es2022",
+    rollupOptions: {
+      input: {
+        index: "site/index.html",
+        privacy: "site/privacy/index.html",
+        terms: "site/terms/index.html"
+      }
+    }
+  }
+});
