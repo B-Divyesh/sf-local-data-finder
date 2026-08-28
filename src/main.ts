@@ -146,10 +146,20 @@ async function runSearch() {
 }
 
 async function addSources(directory: boolean) {
+  if (!pro && status.sources.length >= 3) {
+    ($("#settings-dialog") as HTMLDialogElement).showModal();
+    showToast("The free edition includes three sources; restore an Archive key for more", true);
+    return;
+  }
   try {
     const picked = await open({ directory, multiple: true, filters: directory ? undefined : [{ name: "Supported exports", extensions: ["md", "markdown", "txt", "html", "htm", "mbox", "pdf"] }] });
     if (!picked) return;
-    const paths = Array.isArray(picked) ? picked : [picked];
+    let paths = Array.isArray(picked) ? picked : [picked];
+    const remaining = Math.max(0, 3 - status.sources.length);
+    if (!pro && paths.length > remaining) {
+      paths = paths.slice(0, remaining);
+      showToast(`The free edition indexed the first ${remaining}; an Archive key removes the source limit`);
+    }
     for (const path of paths) {
       statusLine.innerHTML = `<span class="spinner"></span> Indexing ${escapeText(path.split(/[\\/]/).pop() || path)}…`;
       await call("index_source", { path });

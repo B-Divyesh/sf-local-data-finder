@@ -1,5 +1,23 @@
 type Asset = { platform: string; arch: string; format: string; url: string; sha256: string };
 type Manifest = { version: string; assets: Asset[] };
+const licenseKey = "sb_license:local-data-finder";
+
+function captureLicense(): void {
+  const url = new URL(location.href);
+  const token = url.searchParams.get("license");
+  if (!token) return;
+  localStorage.setItem(licenseKey, token);
+  url.searchParams.delete("license");
+  history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  const panel = document.querySelector<HTMLElement>("#license-return")!;
+  document.querySelector("#returned-license")!.textContent = token;
+  panel.hidden = false;
+  document.querySelector("#copy-license")!.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(token);
+    document.querySelector("#copy-license")!.textContent = "Copied";
+  });
+  panel.scrollIntoView({ block: "start" });
+}
 
 function platform(): { os: string; arch: string; label: string; format: string[] } {
   const value = `${navigator.userAgent} ${navigator.platform}`.toLowerCase();
@@ -37,5 +55,6 @@ document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => 
   window.setTimeout(() => { label.textContent = "Copy"; }, 1800);
 }));
 
+captureLicense();
 void resolveDownload();
 if ("serviceWorker" in navigator && location.protocol === "https:") void navigator.serviceWorker.register("/sw.js");

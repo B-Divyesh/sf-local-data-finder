@@ -23,3 +23,10 @@ test("legal routes and keyboard path work", async ({ page }) => {
   await page.goto("/terms/");
   await expect(page.getByRole("heading", { level: 1, name: "Terms" })).toBeVisible();
 });
+
+test("purchase return stores and removes the license from the URL", async ({ page }) => {
+  await page.goto("/?license=test-license-token");
+  await expect(page.getByRole("heading", { name: "Your Archive key is ready." })).toBeVisible();
+  await expect(page).toHaveURL("/");
+  expect(await page.evaluate(() => localStorage.getItem("sb_license:local-data-finder"))).toBe("test-license-token");
+});
