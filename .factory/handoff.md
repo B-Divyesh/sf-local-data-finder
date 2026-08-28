@@ -1,4 +1,4 @@
-# Local Data Finder v0.1.3 handoff
+# Local Data Finder v0.1.4 handoff
 
 ## What was built
 
@@ -38,8 +38,8 @@ Verified locally on 28 August 2026:
 
 ## Release
 
-- Source branch `main` and annotated tag `v0.1.3` were pushed to `B-Divyesh/sf-local-data-finder`. Earlier dry release runs caught and prevented mismatched Tauri package minors, an implicit Linux icon-discovery issue, and a non-recursive release upload glob; v0.1.3 contains all corrections.
-- Workflow run: pending insertion after the v0.1.3 tag is pushed.
+- Source branch `main` and annotated tag `v0.1.4` were pushed to `B-Divyesh/sf-local-data-finder`. Earlier dry release runs caught and prevented mismatched Tauri package minors, an implicit Linux icon-discovery issue, a non-recursive release upload glob, and GitHub's space-to-dot asset normalization; v0.1.4 contains all corrections and hashes the final filenames.
+- Workflow run: pending insertion after the v0.1.4 tag is pushed.
 - Release asset/checksum status: pending at the time this handoff section was drafted; update before final delivery.
 
 ## Known limits

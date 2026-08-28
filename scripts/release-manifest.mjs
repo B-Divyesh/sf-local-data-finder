@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, writeFile } from "node:fs/promises";
-import { basename, extname, join } from "node:path";
+import { readdir, readFile, rename, writeFile } from "node:fs/promises";
+import { basename, dirname, extname, join } from "node:path";
 
 const root = process.argv[2] || "release-assets";
 const version = (process.env.GITHUB_REF_NAME || "v0.1.0").replace(/^v/, "");
@@ -11,7 +11,14 @@ async function files(dir) {
   return (await Promise.all(entries.map((entry) => entry.isDirectory() ? files(join(dir, entry.name)) : join(dir, entry.name)))).flat();
 }
 
-const deliverables = (await files(root)).filter((file) => /\.(dmg|msi|exe|AppImage|deb)$/i.test(file));
+const discovered = (await files(root)).filter((file) => /\.(dmg|msi|exe|AppImage|deb)$/i.test(file));
+const deliverables = [];
+for (const file of discovered) {
+  const normalized = basename(file).replaceAll(" ", ".");
+  const finalPath = join(dirname(file), normalized);
+  if (finalPath !== file) await rename(file, finalPath);
+  deliverables.push(finalPath);
+}
 if (!deliverables.length) throw new Error("No release deliverables found");
 const assets = [];
 const sums = [];
