@@ -87,5 +87,7 @@ jobs:
           name: Local Data Finder ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v0.1.0' }}
           generate_release_notes: true
           files: |
-            release-assets/*
+            release-assets/**/*
+            release-assets/latest.json
+            release-assets/SHA256SUMS
           fail_on_unmatched_files: true

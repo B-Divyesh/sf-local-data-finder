@@ -1,5 +1,4 @@
-type Asset = { platform: string; arch: string; format: string; url: string; sha256: string };
-type Manifest = { version: string; assets: Asset[] };
+type GithubRelease = { tag_name: string; assets: Array<{ name: string; browser_download_url: string }> };
 const licenseKey = "sb_license:local-data-finder";
 
 function captureLicense(): void {
@@ -40,12 +39,17 @@ async function resolveDownload(): Promise<void> {
     return;
   }
   try {
-    const response = await fetch("https://github.com/B-Divyesh/sf-local-data-finder/releases/latest/download/latest.json", { cache: "no-store" });
+    const response = await fetch("https://api.github.com/repos/B-Divyesh/sf-local-data-finder/releases/latest", { cache: "no-store" });
     if (!response.ok) throw new Error("No release manifest");
-    const manifest = await response.json() as Manifest;
-    const asset = manifest.assets.find((item) => item.platform === detected.os && item.arch === detected.arch && detected.format.includes(item.format))
-      || manifest.assets.find((item) => item.platform === detected.os && detected.format.includes(item.format));
-    if (asset) { button.href = asset.url; note.textContent = `Version ${manifest.version} · ${asset.format} · SHA256 published`; }
+    const release = await response.json() as GithubRelease;
+    const candidates = release.assets.filter((asset) => {
+      const name = asset.name.toLowerCase();
+      const formatMatches = detected.format.some((format) => name.endsWith(`.${format.toLowerCase()}`));
+      const osMatches = detected.os === "macos" ? name.endsWith(".dmg") : detected.os === "linux" ? name.endsWith(".appimage") || name.endsWith(".deb") : name.endsWith(".exe") || name.endsWith(".msi");
+      return formatMatches && osMatches;
+    });
+    const asset = candidates.find((item) => detected.arch === "arm64" ? /arm64|aarch64/i.test(item.name) : !/arm64|aarch64/i.test(item.name)) || candidates[0];
+    if (asset) { button.href = asset.browser_download_url; note.textContent = `Version ${release.tag_name.replace(/^v/, "")} · SHA256 published in latest.json`; }
   } catch { note.textContent = "Release downloads · macOS, Windows and Linux"; }
 }
 
