@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Local Data Finder",
+  "version": "0.1.0",
+  "identifier": "in.sociobot.local-data-finder",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build:app",
+    "frontendDist": "../dist/app"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Local Data Finder",
+        "width": 1240,
+        "height": 820,
+        "minWidth": 390,
+        "minHeight": 620,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": { "csp": "default-src 'self'; img-src 'self' asset: data:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.sociobot.in; script-src 'self'" }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Productivity",
+    "shortDescription": "Private search across your local archives",
+    "longDescription": "Index selected folders and exports on-device, search their text, and open the exact local source behind every result.",
+    "copyright": "Copyright 2026 Param Factory",
+    "linux": { "appimage": { "bundleMediaFramework": false } }
+  }
+}
