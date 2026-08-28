@@ -1,0 +1,8 @@
+{
+  "slug": "local-data-finder",
+  "title": "Local Data Finder",
+  "artifact_class": "desktop-app",
+  "job": "Privately search selected local folders and explicit Markdown, HTML, mbox, and text-PDF exports, with a source trail for every result.",
+  "non_goals": ["cloud connectors", "LLM chat", "attachment interpretation", "automatic deletion"],
+  "success_measure": "Locate the source record for at least 80% of known facts in a 50-query personal-archive benchmark."
+}
