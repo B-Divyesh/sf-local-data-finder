@@ -34,13 +34,15 @@ Verified locally on 28 August 2026:
 - Axe: zero serious or critical violations on both the landing site and desktop UI (390 px smoke test).
 - npm production/development dependency audit: zero known vulnerabilities.
 - Lighthouse mobile: Performance 97, Accessibility 100, Best Practices 96, SEO 92; LCP 2.3 s, CLS 0, total blocking time 0 ms, speed index 2.0 s.
-- Static budgets: landing JavaScript 2.96 KB raw, CSS 10.57 KB raw; desktop UI JavaScript 17.47 KB raw, CSS 13.27 KB raw; hero WebP 21.98 KB mobile / 50.53 KB desktop. No runtime font files or third-party scripts.
+- Static budgets: landing JavaScript 3.19 KB raw, CSS 10.57 KB raw; desktop UI JavaScript 17.47 KB raw, CSS 13.27 KB raw; hero WebP 21.98 KB mobile / 50.53 KB desktop. No runtime font files or third-party scripts.
 
 ## Release
 
 - Source branch `main` and annotated tag `v0.1.4` were pushed to `B-Divyesh/sf-local-data-finder`. Earlier dry release runs caught and prevented mismatched Tauri package minors, an implicit Linux icon-discovery issue, a non-recursive release upload glob, and GitHub's space-to-dot asset normalization; v0.1.4 contains all corrections and hashes the final filenames.
-- Workflow run: pending insertion after the v0.1.4 tag is pushed.
-- Release asset/checksum status: pending at the time this handoff section was drafted; update before final delivery.
+- Workflow run: https://github.com/B-Divyesh/sf-local-data-finder/actions/runs/33161635822 — all four build jobs and the publish job passed.
+- Release: https://github.com/B-Divyesh/sf-local-data-finder/releases/tag/v0.1.4
+- Eight assets are live: Apple silicon and Intel DMGs, Windows MSI and NSIS EXE, Linux AppImage and DEB, `latest.json`, and `SHA256SUMS`. The manifest contains six platform artifacts across macOS, Linux, and Windows.
+- Independent download check: `Local.Data.Finder_0.1.4_amd64.deb` downloaded from its manifest URL and matched SHA256 `e04bf4079474963dbdd8b8a53c56c53a5db3a9d0aef431cd3f9b91e95f1b27c5` in both `latest.json` and `SHA256SUMS`.
 
 ## Known limits
 
