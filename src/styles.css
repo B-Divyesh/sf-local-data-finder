@@ -56,6 +56,9 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
 .skip-link:focus { transform: none; }
 
 .topbar { height: 72px; display: flex; align-items: center; gap: 24px; padding: 0 24px; border-bottom: 1px solid var(--line); background: rgba(7, 16, 20, 0.68); backdrop-filter: blur(18px); }
+.demo-banner { min-height: 48px; padding: 8px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: rgba(100,255,209,.12); border-bottom: 1px solid rgba(100,255,209,.35); color: var(--text); font-size: 14px; }
+.demo-banner strong { color: var(--beam); }
+.text-button { min-height: 32px; border: 0; border-radius: 7px; padding: 0 8px; background: transparent; color: var(--beam); cursor: pointer; text-decoration: underline; }
 :root[data-theme="light"] .topbar { background: rgba(243,248,247,.75); }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 250px; font-weight: 680; letter-spacing: -0.02em; }
 .brand svg { width: 32px; height: 32px; fill: none; stroke: var(--beam); stroke-width: 1.8; }
@@ -82,7 +85,9 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
 .source-glyph { color: var(--beam); font-family: ui-monospace, monospace; padding-top: 2px; }
 .source-menu { position: absolute; right: 4px; top: 7px; border: 0; background: transparent; border-radius: 8px; width: 42px; height: 42px; color: var(--muted); cursor: pointer; font-size: 18px; opacity: .4; }
 .source-wrap:hover .source-menu, .source-menu:focus-visible { opacity: 1; }
-.source-error { color: var(--warning); font-size: 12px; margin: -3px 0 8px 44px; }
+.source-error { color: var(--warning); font-size: 12px; margin: -3px 0 8px 44px; line-height: 1.45; }
+.source-error summary { cursor: pointer; min-height: 30px; }
+.source-error ul { margin: 6px 0; padding-left: 17px; color: var(--muted); }
 .source-actions { display: grid; gap: 8px; padding-top: 16px; }
 .support-note { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 16px 8px 0; }
 .rail-empty { text-align: center; color: var(--muted); padding: 44px 14px; }
@@ -102,7 +107,7 @@ main { width: min(1080px, 100%); margin: 0 auto; padding: 52px clamp(28px, 5vw, 
 .search-beam input::placeholder { color: var(--muted); opacity: .74; }
 kbd { border: 1px solid var(--line); border-bottom-width: 2px; padding: 4px 7px; border-radius: 7px; font: 12px ui-monospace, monospace; color: var(--muted); background: var(--surface); }
 .filter-row { display: flex; gap: 8px; overflow-x: auto; padding: 14px 2px 4px; scrollbar-width: thin; }
-.filter { flex: none; min-height: 38px; border: 1px solid var(--line); border-radius: 999px; padding: 0 14px; color: var(--muted); background: transparent; cursor: pointer; }
+.filter { flex: none; min-height: 44px; border: 1px solid var(--line); border-radius: 999px; padding: 0 14px; color: var(--muted); background: transparent; cursor: pointer; }
 .filter:hover { color: var(--text); border-color: var(--muted); }
 .filter.active { background: rgba(100,255,209,.12); color: var(--beam); border-color: rgba(100,255,209,.42); }
 .status-line { min-height: 56px; display: flex; align-items: center; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -140,6 +145,9 @@ mark { color: var(--text); background: rgba(255, 211, 122, .22); border-bottom: 
 .button.primary { color: var(--beam-ink); background: var(--beam); }
 .button.secondary { color: var(--text); border-color: var(--line); background: var(--surface-raised); }
 .button.ghost { color: var(--muted); border-color: var(--line); background: transparent; }
+.button:disabled { cursor: not-allowed; opacity: .5; }
+.export-button { margin-top: 12px; }
+.empty-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
 .button:hover { filter: brightness(1.08); }
 .mobile-sources, .mobile-close { display: none; }
 .toast { position: fixed; z-index: 80; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: var(--surface-raised); color: var(--text); border: 1px solid var(--line); padding: 12px 18px; border-radius: 12px; box-shadow: var(--shadow); transition: opacity 180ms, transform 180ms; }

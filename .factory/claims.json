@@ -1,0 +1,37 @@
+[
+  {
+    "id": "demo-sandbox",
+    "claim": "Try the product with isolated sample data that can be reset.",
+    "where": "Landing first action and /demo/",
+    "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
+    "sandbox": "Fresh browser context; enter /demo/, search a non-match, and reset to MAPLE-742."
+  },
+  {
+    "id": "local-first-site",
+    "claim": "The demo does not send archive data to another origin.",
+    "where": "/demo/ and privacy page",
+    "test": "npm run test:e2e -- --grep @claim:local-first-site",
+    "sandbox": "Fresh browser context records all requests while searching the sample."
+  },
+  {
+    "id": "five-formats",
+    "claim": "Searches Markdown, plain text, HTML, mbox, and text-based PDFs.",
+    "where": "Landing how-it-works section and README",
+    "test": "npm run test:e2e -- --grep @claim:five-formats",
+    "sandbox": "Fresh browser context verifies the visible supported-format statement."
+  },
+  {
+    "id": "csv-export",
+    "claim": "Exports current search results as CSV.",
+    "where": "Desktop search toolbar and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml exports_quoted_csv_with_each_result",
+    "sandbox": "Core fixture exports one result and asserts CSV headers plus a quoted data row."
+  },
+  {
+    "id": "exact-source-open",
+    "claim": "Opens the matched record instead of the selected source root.",
+    "where": "Desktop result action and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml result_open_path_is_the_record_not_its_source_root",
+    "sandbox": "Core fixture searches a nested file and asserts the opening path is that file."
+  }
+]

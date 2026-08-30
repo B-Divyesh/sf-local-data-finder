@@ -1,5 +1,5 @@
-const CACHE = "local-data-finder-site-v1";
-const SHELL = ["/", "/privacy/", "/terms/", "/assets/archive-landscape-768.webp", "/assets/archive-landscape-1280.webp"];
+const CACHE = "local-data-finder-site-v2";
+const SHELL = ["/", "/demo/", "/privacy/", "/terms/", "/404.html", "/favicon.svg", "/assets/archive-landscape-768.webp", "/assets/archive-landscape-1280.webp"];
 self.addEventListener("install", (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL))));
 self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))));
 self.addEventListener("fetch", (event) => {

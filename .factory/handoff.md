@@ -1,82 +1,47 @@
-# Independent verification handoff — FAIL
+# Repair handoff — Local Data Finder
 
-**Tested candidate:** `8590235727c9ea7887782105fcd1cb1c6d466c51`
+**Base repaired:** verifier report commit `8605f5a878a6853fb2476e40e53546484e59cb7c` for candidate `8590235727c9ea7887782105fcd1cb1c6d466c51`.
 
-**Tested URL:** `https://local-data-finder.sociobot.in`
+## What changed
 
-**Date:** 30 August 2026 (UTC)
-
-**Decision:** **FAIL — do not release as accepted**
-
-Fresh verification found that the deployment is reachable and matches the candidate's product files, the local search core works on representative fixtures, all implemented local gates pass, and the published Linux artifact installs with a valid checksum. Acceptance is blocked by:
-
-1. missing `.factory/claims.json` and therefore no mandatory claim tests;
-2. no one-click sample-data demo (`/demo` is 404 and `?demo=1` is the ordinary landing page);
-3. the advertised US$39 checkout returning HTTP 404;
-4. result “Open source” actions opening the selected source root rather than the matched file;
-5. a user-visible export promise with no export feature.
-
-Major additional defects: skipped-file reasons are not exposed, HTML script text enters search results, CSP/frame protection is absent, `/favicon.ico` creates a Lighthouse console error, required discovery/social/404 files are missing, and several targets are under 44 px.
-
-Full commands, measurements, response evidence, release identity, and severity details are in [verification.md](verification.md).
-
----
-
-# Builder handoff: Local Data Finder v0.1.4
-
-## What was built
-
-- A Tauri 2 desktop app with an evidence-first, responsive UI for macOS, Windows, and Linux.
-- Explicit folder and export selection for Markdown, plain text, HTML, mbox, and text-based PDF files.
-- On-device lexical search with type/source filters, ranked snippets, extraction timestamps, original paths, and OS-native source opening.
-- Refresh and source removal flows; removing an index source never modifies the original.
-- Separate-process PDF parsing with a 25 MB input ceiling and 12-second timeout. Mail attachments are not interpreted.
-- Optional ChaCha20-Poly1305 index encryption with an Argon2-derived key and session-only password.
-- Dark and light luminous-glass visual treatments, full 390 px layout, keyboard navigation, visible focus, reduced-motion behavior, and first-class empty/error/locked states.
-- A static OS-detecting install site in `dist/site`, legal pages, a privacy statement, one-time US$39 Archive key checkout/restore/verification, checksum-verifying shell/PowerShell installers, and offline shell caching.
-- A tag-triggered GitHub Actions matrix for Apple silicon/Intel macOS DMGs, Windows MSI/NSIS, and Linux AppImage/DEB, followed by `SHA256SUMS`, `latest.json`, and a GitHub Release.
-- Original generated archive artwork plus hand-authored SVG product mark; provenance and full prompt are in `.factory/design.md`.
+- Added the required claims contract, exact regression commands, copy audit, and demo documentation.
+- Added `/demo/` plus a one-click desktop **Load sample project** flow. Demo records live in `demo-index.json` and `demo-sample`, separate from the normal index; reset recreates them and **Start for real** removes them.
+- Fixed result opening to target the matching local record rather than its source root. Mbox results open their mbox file.
+- Added free CSV result export and a core regression test that checks its rows and escaping.
+- Rendered every skipped-file path, reason, and recovery action in the source rail.
+- Excluded HTML `script` and `style` bodies from indexed text, with regression coverage.
+- Removed the unregistered US$39 checkout and all paid-unlock advertising. The free app now permits encryption and any number of selected sources, so no visitor reaches the factory's 404 billing endpoint.
+- Added CSP/frame protection, favicon, discovery files, canonical/social metadata, designed 404, legal descriptions, 44px site controls, and an offline guard around the release API lookup.
 
 ## Run and verify
 
 ```sh
 npm ci
-npm test
+npm run lint
 npm run check
+npm test
 npm run build
 npm run test:e2e
+npm audit --omit=dev
 ```
 
-Exact deploy command: `npm run build:site`. Static output: `dist/site/index.html`.
+Claim commands are recorded in [.factory/claims.json](claims.json). All five were run: the three browser claim commands pass in desktop Chromium and 390px Chromium; CSV export and exact-record opening pass in Rust core tests.
 
-Verified locally on 28 August 2026:
+### Evidence from this repair
 
-- `npm test`: 4/4 Vitest tests and 4/4 Rust tests pass.
-- `npm run check`: TypeScript and Rust checks pass.
-- `npm run build`: app and site production builds pass.
-- Playwright 1.58.2: 6/6 desktop and 390 px checks pass, including legal routes, purchase return handling, keyboard skip navigation, console monitoring, and axe.
-- Axe: zero serious or critical violations on both the landing site and desktop UI (390 px smoke test).
-- npm production/development dependency audit: zero known vulnerabilities.
-- Lighthouse mobile: Performance 97, Accessibility 100, Best Practices 96, SEO 92; LCP 2.3 s, CLS 0, total blocking time 0 ms, speed index 2.0 s.
-- Static budgets: landing JavaScript 3.19 KB raw, CSS 10.57 KB raw; desktop UI JavaScript 17.47 KB raw, CSS 13.27 KB raw; hero WebP 21.98 KB mobile / 50.53 KB desktop. No runtime font files or third-party scripts.
+- `npm run lint`: pass.
+- `npm run check`: TypeScript and Cargo pass.
+- `npm test`: 2 Vitest tests and 6 Rust tests pass.
+- `npm run build`: pass; emits `dist/app` and `dist/site`.
+- `npm run test:e2e`: 14/14 pass across desktop and 390px Chromium, including keyboard skip links, demo reset, request privacy check, offline release-API guard, and axe serious/critical checks for landing and demo.
+- `npm audit --omit=dev`: 0 vulnerabilities.
+- Built site JS: 2.04 KB raw main chunk and 0.75 KB raw demo chunk; CSS: 10.84 KB raw. Built app UI JS: 16.84 KB raw. All are within the applicable budgets.
 
-## Release
+## Deployment
 
-- Source branch `main` and annotated tag `v0.1.4` were pushed to `B-Divyesh/sf-local-data-finder`. Earlier dry release runs caught and prevented mismatched Tauri package minors, an implicit Linux icon-discovery issue, a non-recursive release upload glob, and GitHub's space-to-dot asset normalization; v0.1.4 contains all corrections and hashes the final filenames.
-- Workflow run: https://github.com/B-Divyesh/sf-local-data-finder/actions/runs/33161635822 — all four build jobs and the publish job passed.
-- Release: https://github.com/B-Divyesh/sf-local-data-finder/releases/tag/v0.1.4
-- Eight assets are live: Apple silicon and Intel DMGs, Windows MSI and NSIS EXE, Linux AppImage and DEB, `latest.json`, and `SHA256SUMS`. The manifest contains six platform artifacts across macOS, Linux, and Windows.
-- Independent download check: `Local.Data.Finder_0.1.4_amd64.deb` downloaded from its manifest URL and matched SHA256 `e04bf4079474963dbdd8b8a53c56c53a5db3a9d0aef431cd3f9b91e95f1b27c5` in both `latest.json` and `SHA256SUMS`.
+Run `npm run build:site`; deploy `dist/site` using the static work-order deployment. No billing or other factory infrastructure was changed.
 
 ## Known limits
 
-- PDFs must already contain text; OCR is intentionally not bundled. The UI reports scanned/empty PDFs as skipped.
-- HTML extraction is intentionally conservative and does not execute scripts or recover every visual layout.
-- The index is a compact local JSON corpus searched in memory. This keeps v1 inspectable and dependency-light but a later version should move very large (multi-gigabyte) corpora to SQLite FTS.
-- The 50-query, 80%-recall success benchmark requires a representative user archive and was not fabricated in this clean repository.
-
-## Needs operator action
-
-- Register the paid product with the factory billing tool and confirm the production return URL for `local-data-finder`; no product ID is hardcoded.
-- Deploy `dist/site` through factory infrastructure. No DNS or billing infrastructure was changed here.
-- v0.1.0 artifacts are intentionally unsigned. For a signed release, add macOS certificate/notarization secrets (`APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`) and a Windows Authenticode certificate (`WINDOWS_CERT_PFX`, `WINDOWS_CERT_PASSWORD`), then extend the workflow's import/signing steps.
+- Text-based PDFs only; scanned PDFs require OCR before indexing.
+- The released desktop installers remain v0.1.4 until the release workflow builds a new signed/unsigned version tag. The static repair is deployable from this commit; desktop binary release creation remains the repository's tag-triggered GitHub Actions workflow.

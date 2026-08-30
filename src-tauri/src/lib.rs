@@ -56,6 +56,7 @@ struct Status {
     locked: bool,
     encrypted: bool,
     last_indexed: Option<DateTime<Utc>>,
+    demo: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -63,6 +64,7 @@ struct SearchResult {
     id: String,
     title: String,
     path: String,
+    open_path: String,
     source_path: String,
     kind: String,
     snippet: String,
@@ -80,21 +82,25 @@ struct AppState {
     encrypted: Mutex<bool>,
     locked: Mutex<bool>,
     password: Mutex<Option<String>>,
+    demo: Mutex<bool>,
 }
 
 impl AppState {
     fn load(app_dir: PathBuf) -> Self {
         let encrypted_path = app_dir.join("index.enc");
         if encrypted_path.exists() {
-            return Self { data: Mutex::new(IndexData::default()), app_dir, encrypted: Mutex::new(true), locked: Mutex::new(true), password: Mutex::new(None) };
+            return Self { data: Mutex::new(IndexData::default()), app_dir, encrypted: Mutex::new(true), locked: Mutex::new(true), password: Mutex::new(None), demo: Mutex::new(false) };
         }
         let data = fs::read(app_dir.join("index.json")).ok().and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default();
-        Self { data: Mutex::new(data), app_dir, encrypted: Mutex::new(false), locked: Mutex::new(false), password: Mutex::new(None) }
+        Self { data: Mutex::new(data), app_dir, encrypted: Mutex::new(false), locked: Mutex::new(false), password: Mutex::new(None), demo: Mutex::new(false) }
     }
 
     fn persist(&self) -> Result<(), String> {
         fs::create_dir_all(&self.app_dir).map_err(to_string)?;
         let bytes = serde_json::to_vec(&*self.data.lock().map_err(to_string)?).map_err(to_string)?;
+        if *self.demo.lock().map_err(to_string)? {
+            return atomic_write(&self.app_dir.join("demo-index.json"), &bytes);
+        }
         if *self.encrypted.lock().map_err(to_string)? {
             let password = self.password.lock().map_err(to_string)?.clone().ok_or("Encrypted index is locked")?;
             let envelope = encrypt_bytes(&bytes, &password)?;
@@ -145,7 +151,51 @@ fn get_status(state: State<AppState>) -> Result<Status, String> {
     let locked = *state.locked.lock().map_err(to_string)?;
     let encrypted = *state.encrypted.lock().map_err(to_string)?;
     let data = state.data.lock().map_err(to_string)?;
-    Ok(Status { sources: data.sources.clone(), document_count: data.documents.len(), locked, encrypted, last_indexed: data.last_indexed })
+    Ok(Status { sources: data.sources.clone(), document_count: data.documents.len(), locked, encrypted, last_indexed: data.last_indexed, demo: *state.demo.lock().map_err(to_string)? })
+}
+
+fn normal_index_data(app_dir: &Path) -> IndexData {
+    fs::read(app_dir.join("index.json")).ok().and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default()
+}
+
+fn sample_project_dir(app_dir: &Path) -> PathBuf { app_dir.join("demo-sample") }
+
+fn write_sample_project(app_dir: &Path) -> Result<PathBuf, String> {
+    let directory = sample_project_dir(app_dir);
+    fs::create_dir_all(&directory).map_err(to_string)?;
+    fs::write(directory.join("northwind-plan.md"), "# Northwind migration plan\n\nMAPLE-742 is the approval record. Preserve the original export until validation is complete.\n").map_err(to_string)?;
+    fs::write(directory.join("field-notes.html"), "<html><head><title>Field notes</title><script>throw new Error('not searchable')</script><style>.hidden { display: none; }</style></head><body><h1>Northwind field notes</h1><p>The owner approved the staged migration on 14 May.</p></body></html>").map_err(to_string)?;
+    fs::write(directory.join("project-mail.mbox"), "From arun@example.test Tue May 14 09:12:00 2026\nSubject: Re: Northwind approval\n\nThe approval for MAPLE-742 is in the migration plan. Keep the original export until validation.\n").map_err(to_string)?;
+    Ok(directory)
+}
+
+#[tauri::command]
+fn load_sample_project(state: State<AppState>) -> Result<Status, String> {
+    *state.demo.lock().map_err(to_string)? = true;
+    *state.encrypted.lock().map_err(to_string)? = false;
+    *state.locked.lock().map_err(to_string)? = false;
+    *state.password.lock().map_err(to_string)? = None;
+    *state.data.lock().map_err(to_string)? = IndexData::default();
+    let _ = fs::remove_file(state.app_dir.join("demo-index.json"));
+    let directory = write_sample_project(&state.app_dir)?;
+    index_source(directory.to_string_lossy().to_string(), state.clone())?;
+    get_status(state)
+}
+
+#[tauri::command]
+fn reset_sample_project(state: State<AppState>) -> Result<Status, String> { load_sample_project(state) }
+
+#[tauri::command]
+fn leave_sample_project(state: State<AppState>) -> Result<Status, String> {
+    let _ = fs::remove_file(state.app_dir.join("demo-index.json"));
+    let _ = fs::remove_dir_all(sample_project_dir(&state.app_dir));
+    let encrypted = state.app_dir.join("index.enc").exists();
+    *state.demo.lock().map_err(to_string)? = false;
+    *state.encrypted.lock().map_err(to_string)? = encrypted;
+    *state.locked.lock().map_err(to_string)? = encrypted;
+    *state.password.lock().map_err(to_string)? = None;
+    *state.data.lock().map_err(to_string)? = if encrypted { IndexData::default() } else { normal_index_data(&state.app_dir) };
+    get_status(state)
 }
 
 #[tauri::command]
@@ -208,22 +258,52 @@ fn remove_source(path: String, state: State<AppState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn search_index(query: String, kind: Option<String>, source: Option<String>, state: State<AppState>) -> Result<Vec<SearchResult>, String> {
-    if *state.locked.lock().map_err(to_string)? { return Err("Unlock the encrypted index first".into()); }
+fn search_documents(query: &str, kind: Option<&str>, source: Option<&str>, data: &IndexData) -> Vec<SearchResult> {
     let terms: Vec<String> = query.split_whitespace().map(|term| term.to_lowercase()).filter(|term| !term.is_empty()).collect();
-    if terms.is_empty() { return Ok(Vec::new()); }
-    let data = state.data.lock().map_err(to_string)?;
+    if terms.is_empty() { return Vec::new(); }
     let mut matches: Vec<SearchResult> = data.documents.iter().filter(|document| {
-        kind.as_ref().map_or(true, |value| &document.kind == value) && source.as_ref().map_or(true, |value| &document.source_path == value)
+        kind.map_or(true, |value| document.kind == value) && source.map_or(true, |value| document.source_path == value)
     }).filter_map(|document| {
         let title = document.title.to_lowercase(); let body = document.body.to_lowercase(); let path = document.path.to_lowercase();
         if !terms.iter().all(|term| title.contains(term) || body.contains(term) || path.contains(term)) { return None; }
         let score = terms.iter().map(|term| title.matches(term).count() * 8 + path.matches(term).count() * 4 + body.matches(term).count().min(20)).sum();
-        Some(SearchResult { id: document.id.clone(), title: document.title.clone(), path: document.path.clone(), source_path: document.source_path.clone(), kind: document.kind.clone(), snippet: make_snippet(&document.body, &terms), extracted_at: document.extracted_at, modified_at: document.modified_at, score })
+        Some(SearchResult { id: document.id.clone(), title: document.title.clone(), path: document.path.clone(), open_path: physical_path(document), source_path: document.source_path.clone(), kind: document.kind.clone(), snippet: make_snippet(&document.body, &terms), extracted_at: document.extracted_at, modified_at: document.modified_at, score })
     }).collect();
     matches.sort_by(|a, b| b.score.cmp(&a.score).then_with(|| b.modified_at.cmp(&a.modified_at)));
     matches.truncate(MAX_RESULTS);
-    Ok(matches)
+    matches
+}
+
+fn physical_path(document: &Document) -> String {
+    if document.kind == "mail" { document.path.split(" · message ").next().unwrap_or(&document.path).to_string() } else { document.path.clone() }
+}
+
+#[tauri::command]
+fn search_index(query: String, kind: Option<String>, source: Option<String>, state: State<AppState>) -> Result<Vec<SearchResult>, String> {
+    if *state.locked.lock().map_err(to_string)? { return Err("Unlock the encrypted index first".into()); }
+    let data = state.data.lock().map_err(to_string)?;
+    Ok(search_documents(&query, kind.as_deref(), source.as_deref(), &data))
+}
+
+fn csv_field(value: &str) -> String { format!("\"{}\"", value.replace('"', "\"\"")) }
+
+fn results_as_csv(results: &[SearchResult]) -> String {
+    let mut output = String::from("title,path,type,snippet,extracted_at\n");
+    for result in results {
+        output.push_str(&[csv_field(&result.title), csv_field(&result.path), csv_field(&result.kind), csv_field(&result.snippet), csv_field(&result.extracted_at.to_rfc3339())].join(","));
+        output.push('\n');
+    }
+    output
+}
+
+#[tauri::command]
+fn export_results(query: String, kind: Option<String>, source: Option<String>, path: String, state: State<AppState>) -> Result<usize, String> {
+    if *state.locked.lock().map_err(to_string)? { return Err("Unlock the encrypted index first".into()); }
+    if query.trim().is_empty() { return Err("Enter a search before exporting results".into()); }
+    let data = state.data.lock().map_err(to_string)?;
+    let results = search_documents(&query, kind.as_deref(), source.as_deref(), &data);
+    atomic_write(Path::new(&path), results_as_csv(&results).as_bytes())?;
+    Ok(results.len())
 }
 
 #[tauri::command]
@@ -293,9 +373,24 @@ fn extract_pdf_isolated(path: &Path) -> Result<String, String> {
 pub fn extract_pdf_worker(path: &str) -> Result<String, String> { pdf_extract::extract_text(path).map_err(|error| format!("PDF parser: {error}")) }
 
 fn strip_html(input: &str) -> String {
-    let mut result = String::with_capacity(input.len()); let mut in_tag = false; let mut last_space = false;
-    for character in input.chars() {
+    let mut result = String::with_capacity(input.len()); let mut in_tag = false; let mut last_space = false; let mut hidden_tag: Option<String> = None;
+    let characters: Vec<char> = input.chars().collect(); let mut index = 0;
+    while index < characters.len() {
+        if characters[index] == '<' {
+            let end = characters[index..].iter().position(|character| *character == '>').map(|offset| index + offset);
+            if let Some(end) = end {
+                let tag = characters[index + 1..end].iter().collect::<String>().trim().to_lowercase();
+                let name = tag.trim_start_matches('/').split_whitespace().next().unwrap_or("");
+                if hidden_tag.as_deref() == Some(name) && tag.starts_with('/') { hidden_tag = None; }
+                else if hidden_tag.is_none() && !tag.starts_with('/') && (name == "script" || name == "style") { hidden_tag = Some(name.to_string()); }
+                if hidden_tag.is_none() && !last_space { result.push(' '); last_space = true; }
+                index = end + 1; continue;
+            }
+        }
+        let character = characters[index];
+        if hidden_tag.is_some() { index += 1; continue; }
         match character { '<' => in_tag = true, '>' => { in_tag = false; if !last_space { result.push(' '); last_space = true; } }, _ if !in_tag => { if character.is_whitespace() { if !last_space { result.push(' '); last_space = true; } } else { result.push(character); last_space = false; } }, _ => {} }
+        index += 1;
     }
     result.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&#39;", "'")
 }
@@ -336,6 +431,7 @@ mod tests {
     #[test]
     fn extracts_html_without_markup() {
         assert_eq!(strip_html("<h1>Archive &amp; Notes</h1><p>Private</p>"), " Archive & Notes Private ");
+        assert!(!strip_html("<p>Visible fact</p><script>must not search</script><style>.hidden{}</style>").contains("must not search"));
     }
 
     #[test]
@@ -358,6 +454,21 @@ mod tests {
         let snippet = make_snippet(&body, &["needle".into()]);
         assert!(snippet.contains("needle")); assert!(snippet.chars().count() < 330);
     }
+
+    #[test]
+    fn exports_quoted_csv_with_each_result() {
+        let result = SearchResult { id: "1".into(), title: "Northwind, plan".into(), path: "/archive/northwind.md".into(), open_path: "/archive/northwind.md".into(), source_path: "/archive".into(), kind: "markdown".into(), snippet: "MAPLE-742".into(), extracted_at: Utc::now(), modified_at: None, score: 1 };
+        let csv = results_as_csv(&[result]);
+        assert!(csv.starts_with("title,path,type,snippet,extracted_at\n"));
+        assert!(csv.contains("\"Northwind, plan\""));
+    }
+
+    #[test]
+    fn result_open_path_is_the_record_not_its_source_root() {
+        let document = Document { id: "1".into(), title: "A".into(), path: "/archive/notes/fact.md".into(), source_path: "/archive".into(), kind: "markdown".into(), body: "MAPLE-742".into(), extracted_at: Utc::now(), modified_at: None };
+        let result = search_documents("MAPLE-742", None, None, &IndexData { documents: vec![document], ..Default::default() });
+        assert_eq!(result[0].open_path, "/archive/notes/fact.md");
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -371,7 +482,7 @@ pub fn run() {
             app.manage(AppState::load(dir));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_status, unlock_index, set_encryption, index_source, refresh_all, remove_source, search_index, open_source])
+        .invoke_handler(tauri::generate_handler![get_status, unlock_index, set_encryption, index_source, refresh_all, remove_source, search_index, export_results, load_sample_project, reset_sample_project, leave_sample_project, open_source])
         .run(tauri::generate_context!())
         .expect("error while running Local Data Finder");
 }

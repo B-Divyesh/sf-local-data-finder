@@ -10,7 +10,7 @@ describe("search presentation", () => {
   });
 
   it("sorts by score and describes filters", () => {
-    const base = { id: "1", title: "a", path: "/a", source_path: "/", kind: "text", snippet: "", extracted_at: "2026", modified_at: null };
+    const base = { id: "1", title: "a", path: "/a", open_path: "/a", source_path: "/", kind: "text", snippet: "", extracted_at: "2026", modified_at: null };
     expect(sortResults([{ ...base, score: 1 }, { ...base, id: "2", score: 3 }])[0].id).toBe("2");
     expect(filterLabel({ kind: "mail", source: "/mail" })).toBe("mail · one source");
   });

@@ -11,12 +11,14 @@ export type Status = {
   locked: boolean;
   encrypted: boolean;
   last_indexed: string | null;
+  demo: boolean;
 };
 
 export type SearchResult = {
   id: string;
   title: string;
   path: string;
+  open_path: string;
   source_path: string;
   kind: string;
   snippet: string;

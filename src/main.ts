@@ -1,17 +1,15 @@
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import "./styles.css";
-import { cachedUnlock, captureReturnedLicense, saveLicense, savedLicense, verifyLicense } from "./license";
 import { filterLabel, highlightSnippet, SUPPORTED_TYPES } from "./search";
 import type { SearchFilters, SearchResult, Status } from "./types";
 
-const emptyStatus: Status = { sources: [], document_count: 0, locked: false, encrypted: false, last_indexed: null };
+const emptyStatus: Status = { sources: [], document_count: 0, locked: false, encrypted: false, last_indexed: null, demo: false };
 let status = emptyStatus;
 let results: SearchResult[] = [];
 let selectedResult = -1;
 let filters: SearchFilters = { kind: "all" };
 let searchTimer = 0;
-let pro = cachedUnlock();
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `
@@ -20,6 +18,7 @@ app.innerHTML = `
     <div class="privacy-signal"><span aria-hidden="true"></span> On-device only</div>
     <button class="icon-button" id="settings-button" aria-label="Open settings" title="Settings"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 9 19.37a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15 1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.63 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63 1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15 4.63a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9 1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z"/></svg></button>
   </header>
+  <section class="demo-banner" id="demo-banner" hidden aria-label="Demo mode"><span><strong>Demo</strong> — sample data, nothing is saved with your archive.</span><span><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="leave-demo">Start for real</button></span></section>
   <div class="app-shell">
     <aside class="source-rail" id="source-rail" aria-label="Indexed sources">
       <div class="rail-heading"><h2>Sources</h2><div><button class="icon-button" id="refresh-sources" aria-label="Refresh all sources" title="Refresh all sources">↻</button><button class="icon-button mobile-close" id="close-sources" aria-label="Close sources">×</button></div></div>
@@ -39,6 +38,7 @@ app.innerHTML = `
         <label id="search-label" for="search-input">Search your indexed records</label>
         <div class="search-beam"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="search-input" type="search" autocomplete="off" placeholder="A phrase, person, filename, or remembered detail…" /><kbd>⌘ K</kbd></div>
         <div class="filter-row" aria-label="Filter by record type" id="type-filters"></div>
+        <button class="button ghost export-button" id="export-results" disabled>Export these results as CSV</button>
       </section>
       <div class="status-line" id="status-line" aria-live="polite"></div>
       <section id="results-region" aria-label="Search results"></section>
@@ -49,9 +49,8 @@ app.innerHTML = `
     <form method="dialog" class="dialog-inner">
       <div class="dialog-heading"><div><p class="eyebrow">Local controls</p><h2 id="settings-title">Settings</h2></div><button class="icon-button" value="cancel" aria-label="Close settings">×</button></div>
       <section><h3>Appearance</h3><div class="segmented" role="group" aria-label="Color theme"><button type="button" data-theme="dark">Dark</button><button type="button" data-theme="light">Light</button><button type="button" data-theme="system">System</button></div></section>
-      <section><h3>Index encryption <span class="pro-tag">Archive key</span></h3><p>Encrypt paths and extracted text at rest. Your password is kept only for this session. Losing it means rebuilding the index.</p><div class="inline-form"><label for="encryption-password">Index password</label><input id="encryption-password" type="password" autocomplete="new-password" minlength="10" /><button type="button" class="button secondary" id="toggle-encryption">Enable encryption</button></div></section>
-      <section><h3>Archive key</h3><p>One-time purchase: encrypted indexes and unlimited sources. Search, source opening, export, and accessibility stay free.</p><div class="inline-form"><label for="license-input">License token</label><input id="license-input" value="${savedLicense() || ""}" autocomplete="off" /><button type="button" class="button secondary" id="restore-license">Verify license</button></div><a class="text-link" href="https://api.sociobot.in/api/v1/products/local-data-finder/checkout" target="_blank" rel="noreferrer">Buy an archive key</a> · <span id="license-status">${pro ? "Verified on this device" : "Free edition"}</span></section>
-      <p class="dialog-note">No telemetry. No corpus content leaves this device.</p>
+      <section><h3>Index encryption</h3><p>Encrypt paths and extracted text at rest. Your password is kept only for this session. Losing it means rebuilding the index.</p><div class="inline-form"><label for="encryption-password">Index password</label><input id="encryption-password" type="password" autocomplete="new-password" minlength="10" /><button type="button" class="button secondary" id="toggle-encryption">Enable encryption</button></div></section>
+      <p class="dialog-note">The app does not send your selected files or search text to a service.</p>
     </form>
   </dialog>
   <dialog id="unlock-dialog" aria-labelledby="unlock-title"><form method="dialog" class="dialog-inner narrow"><h2 id="unlock-title">Unlock your index</h2><p>This index is encrypted. Enter its password to search or re-index it.</p><label for="unlock-password">Index password</label><input id="unlock-password" type="password" autocomplete="current-password" /><p class="form-error" id="unlock-error" aria-live="assertive"></p><div class="dialog-actions"><button class="button primary" type="button" id="unlock-button">Unlock index</button></div></form></dialog>
@@ -62,6 +61,8 @@ const searchInput = $("#search-input") as HTMLInputElement;
 const resultsRegion = $("#results-region") as HTMLElement;
 const statusLine = $("#status-line") as HTMLElement;
 const toast = $("#toast") as HTMLElement;
+
+function renderDemoBanner() { ($("#demo-banner") as HTMLElement).hidden = !status.demo; }
 
 function showToast(message: string, danger = false) {
   toast.textContent = message;
@@ -94,7 +95,7 @@ function renderSources() {
   list.innerHTML = status.sources.map((source) => {
     const name = source.path.split(/[\\/]/).filter(Boolean).pop() || source.path;
     const active = filters.source === source.path;
-    return `<div class="source-wrap"><button class="source-row ${active ? "active" : ""}" data-source="${encodeURIComponent(source.path)}" title="${escapeAttr(source.path)}"><span class="source-glyph" aria-hidden="true">${source.errors.length ? "!" : "⌑"}</span><span><strong>${escapeText(name)}</strong><small>${source.document_count.toLocaleString()} records</small></span></button><button class="source-menu" data-remove="${encodeURIComponent(source.path)}" aria-label="Remove ${escapeAttr(name)} from index">×</button>${source.errors.length ? `<p class="source-error">${source.errors.length} files skipped</p>` : ""}</div>`;
+    return `<div class="source-wrap"><button class="source-row ${active ? "active" : ""}" data-source="${encodeURIComponent(source.path)}" title="${escapeAttr(source.path)}"><span class="source-glyph" aria-hidden="true">${source.errors.length ? "!" : "⌑"}</span><span><strong>${escapeText(name)}</strong><small>${source.document_count.toLocaleString()} records</small></span></button><button class="source-menu" data-remove="${encodeURIComponent(source.path)}" aria-label="Remove ${escapeAttr(name)} from index">×</button>${source.errors.length ? `<details class="source-error"><summary>${source.errors.length} ${source.errors.length === 1 ? "file was" : "files were"} skipped — show reasons</summary><ul>${source.errors.map((error) => `<li>${escapeText(error)}. Choose a text-based export, repair the file, or remove it from this source and refresh.</li>`).join("")}</ul></details>` : ""}</div>`;
   }).join("");
 }
 
@@ -103,9 +104,11 @@ function escapeAttr(value: string): string { return escapeText(value).replace(/"
 
 function renderResults() {
   const query = searchInput.value.trim();
+  ($("#export-results") as HTMLButtonElement).disabled = !query;
   if (!status.sources.length) {
-    resultsRegion.innerHTML = `<div class="empty-state"><div class="empty-orbit" aria-hidden="true"><span></span></div><p class="eyebrow">Your archive stays yours</p><h2>Choose the first place to search</h2><p>Add a folder or explicit export. We extract searchable text locally and keep the source path beside every match.</p><button class="button primary" id="empty-add">Add a folder</button><ul><li>Nothing is uploaded</li><li>Attachments stay closed</li><li>Remove a source without deleting it</li></ul></div>`;
+    resultsRegion.innerHTML = `<div class="empty-state"><div class="empty-orbit" aria-hidden="true"><span></span></div><p class="eyebrow">Choose your next step</p><h2>Choose the first place to search</h2><p>Add a folder or explicit export. We extract searchable text locally and keep the source path beside every match.</p><div class="empty-actions"><button class="button primary" id="empty-add">Add a folder</button><button class="button secondary" id="load-sample">Load sample project</button></div><p class="support-note">The sample is separate from your index and is discarded when you start for real.</p></div>`;
     $("#empty-add").addEventListener("click", () => addSources(true));
+    $("#load-sample").addEventListener("click", loadSampleProject);
     statusLine.textContent = "No indexed records";
     return;
   }
@@ -115,6 +118,7 @@ function renderResults() {
     return;
   }
   statusLine.textContent = `${results.length.toLocaleString()} ${results.length === 1 ? "match" : "matches"} · ${filterLabel(filters)}`;
+  ($("#export-results") as HTMLButtonElement).disabled = false;
   if (!results.length) {
     resultsRegion.innerHTML = `<div class="no-results"><h2>No source record matched “${escapeText(query)}”</h2><p>Try fewer words, check another record type, or refresh your sources if files changed.</p><button class="button secondary" id="refresh-empty">Refresh index</button></div>`;
     $("#refresh-empty").addEventListener("click", refreshAll);
@@ -127,7 +131,7 @@ function renderResults() {
 async function loadStatus() {
   try {
     status = await call<Status>("get_status");
-    renderSources(); renderResults();
+    renderDemoBanner(); renderSources(); renderResults();
     if (status.locked) ($("#unlock-dialog") as HTMLDialogElement).showModal();
   } catch (error) {
     statusLine.textContent = "Desktop bridge unavailable";
@@ -146,20 +150,10 @@ async function runSearch() {
 }
 
 async function addSources(directory: boolean) {
-  if (!pro && status.sources.length >= 3) {
-    ($("#settings-dialog") as HTMLDialogElement).showModal();
-    showToast("The free edition includes three sources; restore an Archive key for more", true);
-    return;
-  }
   try {
     const picked = await open({ directory, multiple: true, filters: directory ? undefined : [{ name: "Supported exports", extensions: ["md", "markdown", "txt", "html", "htm", "mbox", "pdf"] }] });
     if (!picked) return;
     let paths = Array.isArray(picked) ? picked : [picked];
-    const remaining = Math.max(0, 3 - status.sources.length);
-    if (!pro && paths.length > remaining) {
-      paths = paths.slice(0, remaining);
-      showToast(`The free edition indexed the first ${remaining}; an Archive key removes the source limit`);
-    }
     for (const path of paths) {
       statusLine.innerHTML = `<span class="spinner"></span> Indexing ${escapeText(path.split(/[\\/]/).pop() || path)}…`;
       await call("index_source", { path });
@@ -183,8 +177,25 @@ async function removeSource(path: string) {
 
 async function openResult(index: number) {
   const result = results[index]; if (!result) return;
-  try { await call("open_source", { path: result.source_path }); }
+  try { await call("open_source", { path: result.open_path }); }
   catch (error) { showToast(`Could not open source: ${(error as Error).message}`, true); }
+}
+
+async function loadSampleProject() {
+  statusLine.textContent = "Loading sample project…";
+  try { status = await call<Status>("load_sample_project"); results = []; selectedResult = -1; renderDemoBanner(); renderSources(); renderResults(); showToast("Sample project loaded. Search MAPLE-742 to try it."); }
+  catch (error) { showToast((error as Error).message, true); }
+}
+
+async function exportCurrentResults() {
+  const query = searchInput.value.trim();
+  if (!query) return showToast("Enter a search before exporting results", true);
+  try {
+    const path = await save({ defaultPath: "local-data-finder-results.csv", filters: [{ name: "CSV", extensions: ["csv"] }] });
+    if (!path) return;
+    const count = await call<number>("export_results", { query, kind: filters.kind === "all" ? null : filters.kind, source: filters.source || null, path });
+    showToast(`Exported ${count} ${count === 1 ? "result" : "results"} as CSV`);
+  } catch (error) { showToast((error as Error).message, true); }
 }
 
 function setTheme(theme: string) {
@@ -195,6 +206,15 @@ function setTheme(theme: string) {
 $("#add-folder").addEventListener("click", () => addSources(true));
 $("#add-files").addEventListener("click", () => addSources(false));
 $("#refresh-sources").addEventListener("click", refreshAll);
+$("#export-results").addEventListener("click", exportCurrentResults);
+$("#reset-demo").addEventListener("click", async () => {
+  try { status = await call<Status>("reset_sample_project"); results = []; selectedResult = -1; renderSources(); renderResults(); showToast("Sample project reset"); }
+  catch (error) { showToast((error as Error).message, true); }
+});
+$("#leave-demo").addEventListener("click", async () => {
+  try { status = await call<Status>("leave_sample_project"); results = []; selectedResult = -1; filters = { kind: "all" }; renderDemoBanner(); renderFilters(); renderSources(); renderResults(); showToast("Sample data discarded. Choose a folder to start."); }
+  catch (error) { showToast((error as Error).message, true); }
+});
 $("#settings-button").addEventListener("click", () => ($("#settings-dialog") as HTMLDialogElement).showModal());
 $("#show-sources").addEventListener("click", () => $("#source-rail").classList.add("open"));
 $("#close-sources").addEventListener("click", () => $("#source-rail").classList.remove("open"));
@@ -216,17 +236,8 @@ document.addEventListener("keydown", (event) => {
 });
 document.querySelectorAll<HTMLButtonElement>("[data-theme]").forEach((button) => button.addEventListener("click", () => setTheme(button.dataset.theme!)));
 
-$("#restore-license").addEventListener("click", async () => {
-  const token = ($("#license-input") as HTMLInputElement).value.trim();
-  if (!token) return showToast("Paste a license token first", true);
-  saveLicense(token); const verdict = await verifyLicense(true); pro = verdict.valid;
-  $("#license-status").textContent = verdict.valid ? "Verified on this device" : verdict.reason === "offline" ? "Could not verify while offline" : "License is not active";
-  showToast(verdict.valid ? "Archive key restored" : "License could not be verified", !verdict.valid);
-});
-
 $("#toggle-encryption").addEventListener("click", async () => {
   const password = ($("#encryption-password") as HTMLInputElement).value;
-  if (!status.encrypted && !pro) return showToast("An archive key unlocks encrypted indexes", true);
   if (password.length < 10) return showToast("Use at least 10 characters for the index password", true);
   try { await call("set_encryption", { enabled: !status.encrypted, password }); showToast(status.encrypted ? "Index encryption disabled" : "Index encrypted"); await loadStatus(); }
   catch (error) { showToast((error as Error).message, true); }
@@ -239,7 +250,5 @@ $("#unlock-button").addEventListener("click", async () => {
 });
 
 setTheme(localStorage.getItem("theme") || "system");
-captureReturnedLicense();
-void verifyLicense().then((verdict) => { pro = verdict.valid; $("#license-status").textContent = pro ? "Verified on this device" : verdict.reason === "offline" ? "Offline · using last verified status" : "Free edition"; });
 renderFilters();
 void loadStatus();
