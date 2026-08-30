@@ -48,4 +48,4 @@ No billing or other factory infrastructure was changed.
 ## Known limits
 
 - Text-based PDFs only; scanned PDFs require OCR before indexing.
-- The released desktop installers remain v0.1.4 until the release workflow builds a new signed/unsigned version tag. The static repair is deployable from this commit; desktop binary release creation remains the repository's tag-triggered GitHub Actions workflow.
+- Desktop installers are rebuilt by the repository's tag-triggered GitHub Actions workflow as v0.1.5. They remain unsigned unless the operator supplies platform signing credentials.
