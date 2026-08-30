@@ -1,4 +1,28 @@
-# Local Data Finder v0.1.4 handoff
+# Independent verification handoff — FAIL
+
+**Tested candidate:** `8590235727c9ea7887782105fcd1cb1c6d466c51`
+
+**Tested URL:** `https://local-data-finder.sociobot.in`
+
+**Date:** 30 August 2026 (UTC)
+
+**Decision:** **FAIL — do not release as accepted**
+
+Fresh verification found that the deployment is reachable and matches the candidate's product files, the local search core works on representative fixtures, all implemented local gates pass, and the published Linux artifact installs with a valid checksum. Acceptance is blocked by:
+
+1. missing `.factory/claims.json` and therefore no mandatory claim tests;
+2. no one-click sample-data demo (`/demo` is 404 and `?demo=1` is the ordinary landing page);
+3. the advertised US$39 checkout returning HTTP 404;
+4. result “Open source” actions opening the selected source root rather than the matched file;
+5. a user-visible export promise with no export feature.
+
+Major additional defects: skipped-file reasons are not exposed, HTML script text enters search results, CSP/frame protection is absent, `/favicon.ico` creates a Lighthouse console error, required discovery/social/404 files are missing, and several targets are under 44 px.
+
+Full commands, measurements, response evidence, release identity, and severity details are in [verification.md](verification.md).
+
+---
+
+# Builder handoff: Local Data Finder v0.1.4
 
 ## What was built
 
