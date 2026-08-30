@@ -39,7 +39,11 @@ Claim commands are recorded in [.factory/claims.json](claims.json). All five wer
 
 ## Deployment
 
-Run `npm run build:site`; deploy `dist/site` using the static work-order deployment. No billing or other factory infrastructure was changed.
+Deployed `dist/site` to the existing static app `sf-local-data-finder` on 30 August 2026. The deployment completed successfully as `bf2a1845-9f3a-45b1-bef4-50a232760f64`; live `https://local-data-finder.sociobot.in/demo/` returns the sample-project page.
+
+Final live `verify-url.sh` evidence: HTTP 200, 749 ms load, zero console/page errors, title `Local Data Finder — Find local archive records`, `lang="en"`, one `h1`, a `main` landmark, zero missing image alts, and zero unlabeled buttons. Live responses include `Content-Security-Policy` with `frame-ancestors 'none'` and `X-Frame-Options: DENY`.
+
+No billing or other factory infrastructure was changed.
 
 ## Known limits
 
