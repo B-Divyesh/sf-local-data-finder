@@ -48,4 +48,4 @@ No billing or other factory infrastructure was changed.
 ## Known limits
 
 - Text-based PDFs only; scanned PDFs require OCR before indexing.
-- Desktop installers are rebuilt by the repository's tag-triggered GitHub Actions workflow as v0.1.5. They remain unsigned unless the operator supplies platform signing credentials.
+- Desktop release `v0.1.5` is published from the repaired source. GitHub Actions run `33298120906` completed successfully with macOS arm64/x64 DMGs, Windows MSI/NSIS, Linux AppImage/DEB, `latest.json`, and `SHA256SUMS`. A downloaded `Local.Data.Finder_0.1.5_amd64.deb` matched its published SHA-256. Installers remain unsigned unless the operator supplies platform signing credentials.
