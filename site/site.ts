@@ -12,9 +12,7 @@ function platform(): { os: string; arch: string; label: string; format: string[]
 async function resolveDownload(): Promise<void> {
   const detected = platform();
   const button = document.querySelector<HTMLAnchorElement>("#primary-download")!;
-  const label = document.querySelector("#download-label")!;
   const note = document.querySelector("#download-note")!;
-  label.textContent = `Download for ${detected.label}`;
   if (!detected.os) return;
   if (!navigator.onLine) {
     note.textContent = "Offline — open this page online to check current downloads.";

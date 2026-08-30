@@ -4,6 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 test("landing page has one clear heading and no serious accessibility violations", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page).toHaveTitle(/Local Data Finder/);
   await expect(page.locator("h1")).toHaveCount(1);
