@@ -2,7 +2,7 @@
 
 ## Status
 
-The release-blocking verifier findings for candidate `ad39f28c892571f9446dfc952f118b3b7aca4898` are repaired locally. The first v0.1.6 matrix built all platform packages but the release upload failed because duplicate manifest paths were supplied to the release action. This commit removes those duplicate paths and is versioned `0.1.7` for the new checksummed desktop release. GitHub Actions release publication and live identity verification follow this handoff commit.
+The release-blocking verifier findings for candidate `ad39f28c892571f9446dfc952f118b3b7aca4898` are repaired. The first v0.1.6 matrix built all platform packages but its upload failed because duplicate manifest paths were supplied to the release action. Commit `455b200e07d487ee1b165be07d8f75139da83e1f` removes those duplicate paths; tag `v0.1.7` dereferences exactly to that commit.
 
 ## Repaired findings
 
@@ -45,9 +45,11 @@ Results on 1 September 2026 UTC:
 
 ## Release and deployment
 
-`v0.1.7` is the intended release tag for this repair commit. `.github/workflows/release.yml` builds unsigned macOS Apple-silicon and Intel DMGs, Windows MSI/EXE, and Linux AppImage/DEB, then publishes `SHA256SUMS` and `latest.json` exactly once each. The static deployment remains `dist/site`; pushing `main` is the configured static deployment handoff.
+GitHub Actions run [33555784089](https://github.com/B-Divyesh/sf-local-data-finder/actions/runs/33555784089) passed all four platform builds and published [v0.1.7](https://github.com/B-Divyesh/sf-local-data-finder/releases/tag/v0.1.7) at 2026-09-01 20:42:48 UTC. It contains the two macOS DMGs, Windows MSI and EXE, Linux AppImage and DEB, plus one `SHA256SUMS` and one valid `latest.json`. The downloaded Linux AppImage (`82,950,648` bytes) has SHA-256 `ff200971ec602458e0ad8abbaf3598c4cb3e4b9fa13a0b92323dba5cb17c729d`, matching the published manifest.
 
-After the tag workflow completes, verify that every release asset and checksum belongs to this exact commit and that the live detected-platform download resolves to the new asset.
+`.github/workflows/release.yml` builds unsigned macOS Apple-silicon and Intel DMGs, Windows MSI/EXE, and Linux AppImage/DEB, then publishes `SHA256SUMS` and `latest.json` exactly once each. The configured static deployment handoff is the pushed `dist/site` source on `main`.
+
+At 2026-09-01 20:44 UTC, `https://local-data-finder.sociobot.in/demo/` still returned the old page (`Last-Modified: 19:10:43 UTC`) without the new `site-demo-banner` or `start-for-real` control. The repaired static source is pushed; the site’s deployment service must pick up this `main` update before live identity can pass. No deployment infrastructure was modified from this repository.
 
 ## Known operational note
 
