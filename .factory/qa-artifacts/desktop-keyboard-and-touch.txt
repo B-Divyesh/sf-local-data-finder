@@ -1,0 +1,14 @@
+Candidate: 1eff0287b773810e2c80fe56a4c5f5b955bd3f3f
+Viewport: 390x844 CSS pixels
+
+Keyboard result check
+open_source calls after one Enter: 2
+
+Visible desktop-app targets below 44 CSS pixels
+Skip to search: 145x43
+Reset demo: 99x32
+Start for real: 105x32
+Remove source: 42x42
+Show parser-error reasons: 258x30
+
+The browser demo had no visible target below 44 CSS pixels at the same viewport.

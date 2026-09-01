@@ -1,0 +1,14 @@
+{
+  "url": "https://local-data-finder.sociobot.in/",
+  "loadMs": 1102,
+  "errors": [],
+  "a11y": {
+    "title": "Local Data Finder — Find local archive records",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 2742
+  }
+}
