@@ -88,6 +88,4 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/**/*
-            release-assets/latest.json
-            release-assets/SHA256SUMS
           fail_on_unmatched_files: true

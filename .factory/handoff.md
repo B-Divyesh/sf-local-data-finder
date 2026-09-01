@@ -1,8 +1,8 @@
-# Repair handoff — Local Data Finder v0.1.6
+# Repair handoff — Local Data Finder v0.1.7
 
 ## Status
 
-The release-blocking verifier findings for candidate `ad39f28c892571f9446dfc952f118b3b7aca4898` are repaired locally. This commit is versioned `0.1.6` for a new checksummed desktop release. GitHub Actions release publication and live identity verification follow this handoff commit.
+The release-blocking verifier findings for candidate `ad39f28c892571f9446dfc952f118b3b7aca4898` are repaired locally. The first v0.1.6 matrix built all platform packages but the release upload failed because duplicate manifest paths were supplied to the release action. This commit removes those duplicate paths and is versioned `0.1.7` for the new checksummed desktop release. GitHub Actions release publication and live identity verification follow this handoff commit.
 
 ## Repaired findings
 
@@ -45,7 +45,7 @@ Results on 1 September 2026 UTC:
 
 ## Release and deployment
 
-`v0.1.6` is the intended release tag for this repair commit. `.github/workflows/release.yml` builds unsigned macOS Apple-silicon and Intel DMGs, Windows MSI/EXE, and Linux AppImage/DEB, then publishes `SHA256SUMS` and `latest.json`. The static deployment remains `dist/site`; pushing `main` is the configured static deployment handoff.
+`v0.1.7` is the intended release tag for this repair commit. `.github/workflows/release.yml` builds unsigned macOS Apple-silicon and Intel DMGs, Windows MSI/EXE, and Linux AppImage/DEB, then publishes `SHA256SUMS` and `latest.json` exactly once each. The static deployment remains `dist/site`; pushing `main` is the configured static deployment handoff.
 
 After the tag workflow completes, verify that every release asset and checksum belongs to this exact commit and that the live detected-platform download resolves to the new asset.
 
