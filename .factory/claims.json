@@ -2,36 +2,92 @@
   {
     "id": "demo-sandbox",
     "claim": "Try the product with isolated sample data that can be reset.",
-    "where": "Landing first action and /demo/",
+    "where": "Landing first action, /demo/, README, and desktop first-run screen",
     "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
-    "sandbox": "Fresh browser context; enter /demo/, search a non-match, and reset to MAPLE-742."
+    "sandbox": "Fresh browser context opens /demo/, searches a non-match, then resets to MAPLE-742."
   },
   {
     "id": "local-first-site",
-    "claim": "The demo does not send archive data to another origin.",
-    "where": "/demo/ and privacy page",
+    "claim": "The browser demo does not send archive data to another origin.",
+    "where": "/demo/ and Privacy",
     "test": "npm run test:e2e -- --grep @claim:local-first-site",
-    "sandbox": "Fresh browser context records all requests while searching the sample."
+    "sandbox": "Fresh browser context records every request while loading and searching the sample."
+  },
+  {
+    "id": "desktop-local-processing",
+    "claim": "The desktop core has no network client, LLM, or archive service endpoint.",
+    "where": "Landing privacy section, desktop settings, Privacy, and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_desktop_core_has_no_network_client_llm_or_archive_endpoint",
+    "sandbox": "Compiled desktop-core source and runtime dependencies are checked for network clients and archive endpoints."
   },
   {
     "id": "five-formats",
     "claim": "Searches Markdown, plain text, HTML, mbox, and text-based PDFs.",
     "where": "Landing how-it-works section and README",
-    "test": "npm run test:e2e -- --grep @claim:five-formats",
-    "sandbox": "Fresh browser context verifies the visible supported-format statement."
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_five_formats_are_ingested_and_searchable",
+    "sandbox": "Temporary fixtures for all five formats are parsed; HTML script text is excluded and each searchable body is asserted."
   },
   {
     "id": "csv-export",
     "claim": "Exports current search results as CSV.",
     "where": "Desktop search toolbar and README",
-    "test": "cargo test --manifest-path src-tauri/Cargo.toml exports_quoted_csv_with_each_result",
-    "sandbox": "Core fixture exports one result and asserts CSV headers plus a quoted data row."
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_csv_export_writes_public_result_file",
+    "sandbox": "The public export path writes a CSV with its header, a quoted result row, and the expected row count."
   },
   {
     "id": "exact-source-open",
     "claim": "Opens the matched record instead of the selected source root.",
-    "where": "Desktop result action and README",
-    "test": "cargo test --manifest-path src-tauri/Cargo.toml result_open_path_is_the_record_not_its_source_root",
-    "sandbox": "Core fixture searches a nested file and asserts the opening path is that file."
+    "where": "Landing how-it-works section, desktop result action, and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_exact_source_open_uses_record_path",
+    "sandbox": "A nested record is searched and its result open path is asserted to be the record itself."
+  },
+  {
+    "id": "attachments-closed",
+    "claim": "Mail attachments stay closed.",
+    "where": "Landing how-it-works section and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_attachments_are_not_decoded_or_opened",
+    "sandbox": "A multipart mbox fixture includes base64 attachment text; only the message body is indexed."
+  },
+  {
+    "id": "source-removal",
+    "claim": "Removing a source does not delete the original.",
+    "where": "Landing privacy section and Privacy",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_removing_source_keeps_original_files",
+    "sandbox": "Removing a source clears index records while the original temporary file remains unchanged."
+  },
+  {
+    "id": "encrypted-index",
+    "claim": "Encrypts extracted text and paths at rest.",
+    "where": "Landing privacy section, desktop settings, and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_encrypted_storage_hides_paths_and_text_and_rejects_wrong_password",
+    "sandbox": "An encrypted index envelope is checked for absence of plaintext path/text and for correct-password-only recovery."
+  },
+  {
+    "id": "session-password",
+    "claim": "The encryption password stays only for the current app session.",
+    "where": "Landing privacy section, desktop settings, and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_encryption_password_is_not_restored_with_the_index",
+    "sandbox": "A fresh app state loaded from encrypted-index storage begins locked with no in-memory password."
+  },
+  {
+    "id": "parser-limits",
+    "claim": "PDF extraction has a 25 MB input cap and a 12-second safety limit.",
+    "where": "README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_parser_limits_reject_oversize_and_timeout_workers",
+    "sandbox": "An oversize temporary file is rejected and a timed worker returns the documented limit error."
+  },
+  {
+    "id": "retrieval-benchmark",
+    "claim": "Finds the source record for at least 80% of a 50-query archive benchmark.",
+    "where": ".factory/brief.json success measure",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_retrieval_benchmark_finds_at_least_80_percent",
+    "sandbox": "Fifty source-grounded records are queried independently and at least forty correct first results are required."
+  },
+  {
+    "id": "published-checksums",
+    "claim": "Published release assets include SHA256 checksums, and the installers compare them before completing.",
+    "where": "Landing install section and README",
+    "test": "npm run test:web -- --testNamePattern @claim:published-checksums",
+    "sandbox": "Temporary release assets produce SHA256SUMS/latest.json, and both installer scripts contain the hash comparison."
   }
 ]

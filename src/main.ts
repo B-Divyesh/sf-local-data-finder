@@ -21,7 +21,7 @@ app.innerHTML = `
   <section class="demo-banner" id="demo-banner" hidden aria-label="Demo mode"><span><strong>Demo</strong> — sample data, nothing is saved with your archive.</span><span><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="leave-demo">Start for real</button></span></section>
   <div class="app-shell">
     <aside class="source-rail" id="source-rail" aria-label="Indexed sources">
-      <div class="rail-heading"><h2>Sources</h2><div><button class="icon-button" id="refresh-sources" aria-label="Refresh all sources" title="Refresh all sources">↻</button><button class="icon-button mobile-close" id="close-sources" aria-label="Close sources">×</button></div></div>
+      <div class="rail-heading"><h2>Sources</h2><div><button class="icon-button mobile-close" id="close-sources" aria-label="Close sources">×</button><button class="icon-button" id="refresh-sources" aria-label="Refresh all sources" title="Refresh all sources">↻</button></div></div>
       <div class="source-list" id="source-list"></div>
       <div class="source-actions">
         <button class="button secondary" id="add-folder">+ Add folder</button>
@@ -32,7 +32,7 @@ app.innerHTML = `
     <main id="main" tabindex="-1">
       <div class="workspace-heading">
         <div><p class="eyebrow">Private archive retrieval</p><h1>Find the record, not a guess.</h1></div>
-        <button class="button ghost mobile-sources" id="show-sources">Sources <span id="mobile-source-count">0</span></button>
+        <button class="button ghost mobile-sources" id="show-sources" aria-controls="source-rail" aria-expanded="false">Sources <span id="mobile-source-count">0</span></button>
       </div>
       <section class="search-area" aria-labelledby="search-label">
         <label id="search-label" for="search-input">Search your indexed records</label>
@@ -44,6 +44,7 @@ app.innerHTML = `
       <section id="results-region" aria-label="Search results"></section>
     </main>
   </div>
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="settings-dialog" aria-labelledby="settings-title">
     <form method="dialog" class="dialog-inner">
@@ -62,7 +63,16 @@ const resultsRegion = $("#results-region") as HTMLElement;
 const statusLine = $("#status-line") as HTMLElement;
 const toast = $("#toast") as HTMLElement;
 
-function renderDemoBanner() { ($("#demo-banner") as HTMLElement).hidden = !status.demo; }
+function renderDemoBanner() { ($("#demo-banner") as HTMLElement).hidden = status.demo !== true; }
+
+function renderSettings() {
+  const toggle = $("#toggle-encryption") as HTMLButtonElement;
+  const password = $("#encryption-password") as HTMLInputElement;
+  toggle.textContent = status.encrypted ? "Disable encryption" : "Enable encryption";
+  toggle.setAttribute("aria-pressed", String(status.encrypted));
+  password.required = !status.encrypted;
+  document.querySelectorAll<HTMLButtonElement>(".segmented [data-theme]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.theme === document.documentElement.dataset.theme)));
+}
 
 function showToast(message: string, danger = false) {
   toast.textContent = message;
@@ -131,7 +141,7 @@ function renderResults() {
 async function loadStatus() {
   try {
     status = await call<Status>("get_status");
-    renderDemoBanner(); renderSources(); renderResults();
+    renderDemoBanner(); renderSources(); renderResults(); renderSettings();
     if (status.locked) ($("#unlock-dialog") as HTMLDialogElement).showModal();
   } catch (error) {
     statusLine.textContent = "Desktop bridge unavailable";
@@ -183,7 +193,7 @@ async function openResult(index: number) {
 
 async function loadSampleProject() {
   statusLine.textContent = "Loading sample project…";
-  try { status = await call<Status>("load_sample_project"); results = []; selectedResult = -1; renderDemoBanner(); renderSources(); renderResults(); showToast("Sample project loaded. Search MAPLE-742 to try it."); }
+  try { status = await call<Status>("load_sample_project"); results = []; selectedResult = -1; renderDemoBanner(); renderSources(); renderResults(); renderSettings(); showToast("Sample project loaded. Search MAPLE-742 to try it."); }
   catch (error) { showToast((error as Error).message, true); }
 }
 
@@ -201,6 +211,53 @@ async function exportCurrentResults() {
 function setTheme(theme: string) {
   localStorage.setItem("theme", theme);
   document.documentElement.dataset.theme = theme;
+  renderSettings();
+}
+
+const mobileLayout = window.matchMedia("(max-width: 760px)");
+const sourceRail = $("#source-rail") as HTMLElement;
+const showSources = $("#show-sources") as HTMLButtonElement;
+const drawerBackdrop = $("#drawer-backdrop") as HTMLElement;
+
+function closeSources(restoreFocus = true) {
+  sourceRail.classList.remove("open");
+  showSources.setAttribute("aria-expanded", "false");
+  drawerBackdrop.hidden = true;
+  sourceRail.removeAttribute("role");
+  sourceRail.removeAttribute("aria-modal");
+  if (mobileLayout.matches) {
+    sourceRail.inert = true;
+    sourceRail.setAttribute("aria-hidden", "true");
+    sourceRail.hidden = true;
+    if (restoreFocus) showSources.focus();
+  }
+}
+
+function openSources() {
+  if (!mobileLayout.matches) return;
+  sourceRail.hidden = false;
+  sourceRail.inert = false;
+  sourceRail.removeAttribute("aria-hidden");
+  sourceRail.setAttribute("role", "dialog");
+  sourceRail.setAttribute("aria-modal", "true");
+  drawerBackdrop.hidden = false;
+  showSources.setAttribute("aria-expanded", "true");
+  requestAnimationFrame(() => sourceRail.classList.add("open"));
+  ($("#close-sources") as HTMLButtonElement).focus();
+}
+
+function syncSourceRail() {
+  if (mobileLayout.matches) closeSources(false);
+  else {
+    sourceRail.hidden = false;
+    sourceRail.inert = false;
+    sourceRail.removeAttribute("aria-hidden");
+    sourceRail.removeAttribute("role");
+    sourceRail.removeAttribute("aria-modal");
+    sourceRail.classList.remove("open");
+    drawerBackdrop.hidden = true;
+    showSources.setAttribute("aria-expanded", "false");
+  }
 }
 
 $("#add-folder").addEventListener("click", () => addSources(true));
@@ -208,23 +265,24 @@ $("#add-files").addEventListener("click", () => addSources(false));
 $("#refresh-sources").addEventListener("click", refreshAll);
 $("#export-results").addEventListener("click", exportCurrentResults);
 $("#reset-demo").addEventListener("click", async () => {
-  try { status = await call<Status>("reset_sample_project"); results = []; selectedResult = -1; renderSources(); renderResults(); showToast("Sample project reset"); }
+  try { status = await call<Status>("reset_sample_project"); results = []; selectedResult = -1; renderDemoBanner(); renderSources(); renderResults(); renderSettings(); showToast("Sample project reset"); }
   catch (error) { showToast((error as Error).message, true); }
 });
 $("#leave-demo").addEventListener("click", async () => {
-  try { status = await call<Status>("leave_sample_project"); results = []; selectedResult = -1; filters = { kind: "all" }; renderDemoBanner(); renderFilters(); renderSources(); renderResults(); showToast("Sample data discarded. Choose a folder to start."); }
+  try { status = await call<Status>("leave_sample_project"); results = []; selectedResult = -1; filters = { kind: "all" }; renderDemoBanner(); renderFilters(); renderSources(); renderResults(); renderSettings(); showToast("Sample data discarded. Choose a folder to start."); }
   catch (error) { showToast((error as Error).message, true); }
 });
 $("#settings-button").addEventListener("click", () => ($("#settings-dialog") as HTMLDialogElement).showModal());
-$("#show-sources").addEventListener("click", () => $("#source-rail").classList.add("open"));
-$("#close-sources").addEventListener("click", () => $("#source-rail").classList.remove("open"));
+showSources.addEventListener("click", openSources);
+$("#close-sources").addEventListener("click", () => closeSources());
+drawerBackdrop.addEventListener("click", () => closeSources());
 searchInput.addEventListener("input", () => { window.clearTimeout(searchTimer); searchTimer = window.setTimeout(runSearch, 180); });
 $("#type-filters").addEventListener("click", (event) => { const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-kind]"); if (!button) return; filters.kind = button.dataset.kind; renderFilters(); runSearch(); });
 $("#source-list").addEventListener("click", (event) => {
   const remove = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-remove]");
   if (remove) return void removeSource(decodeURIComponent(remove.dataset.remove!));
   const row = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-source]");
-  if (row) { const source = decodeURIComponent(row.dataset.source!); filters.source = filters.source === source ? undefined : source; renderSources(); runSearch(); $("#source-rail").classList.remove("open"); }
+  if (row) { const source = decodeURIComponent(row.dataset.source!); filters.source = filters.source === source ? undefined : source; renderSources(); runSearch(); closeSources(); }
 });
 resultsRegion.addEventListener("click", (event) => { const row = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-result]"); if (row) openResult(Number(row.dataset.result)); });
 document.addEventListener("keydown", (event) => {
@@ -233,12 +291,19 @@ document.addEventListener("keydown", (event) => {
   if (target === searchInput && results.length && ["ArrowDown", "ArrowUp"].includes(event.key)) { event.preventDefault(); selectedResult = Math.max(0, Math.min(results.length - 1, selectedResult + (event.key === "ArrowDown" ? 1 : -1))); renderResults(); document.querySelector<HTMLElement>(`[data-result="${selectedResult}"]`)?.focus(); }
   if (event.key === "Enter" && target.matches("[data-result]")) openResult(Number(target.dataset.result));
   if (event.key === "Escape" && target === searchInput && searchInput.value) { searchInput.value = ""; runSearch(); }
+  if (event.key === "Escape" && sourceRail.classList.contains("open")) { event.preventDefault(); closeSources(); }
+  if (event.key === "Tab" && sourceRail.classList.contains("open")) {
+    const focusable = [...sourceRail.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((element) => !element.hidden);
+    const first = focusable[0]; const last = focusable.at(-1);
+    if (event.shiftKey && target === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && target === last) { event.preventDefault(); first?.focus(); }
+  }
 });
 document.querySelectorAll<HTMLButtonElement>("[data-theme]").forEach((button) => button.addEventListener("click", () => setTheme(button.dataset.theme!)));
 
 $("#toggle-encryption").addEventListener("click", async () => {
   const password = ($("#encryption-password") as HTMLInputElement).value;
-  if (password.length < 10) return showToast("Use at least 10 characters for the index password", true);
+  if (!status.encrypted && password.length < 10) return showToast("Use at least 10 characters for the index password", true);
   try { await call("set_encryption", { enabled: !status.encrypted, password }); showToast(status.encrypted ? "Index encryption disabled" : "Index encrypted"); await loadStatus(); }
   catch (error) { showToast((error as Error).message, true); }
 });
@@ -250,5 +315,7 @@ $("#unlock-button").addEventListener("click", async () => {
 });
 
 setTheme(localStorage.getItem("theme") || "system");
+mobileLayout.addEventListener("change", syncSourceRail);
+syncSourceRail();
 renderFilters();
 void loadStatus();

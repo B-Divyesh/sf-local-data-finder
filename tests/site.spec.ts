@@ -46,7 +46,7 @@ test("@claim:local-first-site the demo sends no archive data to another origin",
   expect(requests.every((url) => new URL(url).origin === "http://127.0.0.1:4173")).toBe(true);
 });
 
-test("@claim:five-formats the site names the supported local text formats", async ({ page }) => {
+test("landing names the supported local text formats", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText(/Markdown, plain text, HTML, mbox and text-based PDFs/)).toBeVisible();
 });

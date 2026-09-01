@@ -8,7 +8,7 @@ use std::{
     collections::hash_map::DefaultHasher,
     fs,
     hash::{Hash, Hasher},
-    io,
+    io::{self, Read},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::Mutex,
@@ -166,6 +166,8 @@ fn write_sample_project(app_dir: &Path) -> Result<PathBuf, String> {
     fs::write(directory.join("northwind-plan.md"), "# Northwind migration plan\n\nMAPLE-742 is the approval record. Preserve the original export until validation is complete.\n").map_err(to_string)?;
     fs::write(directory.join("field-notes.html"), "<html><head><title>Field notes</title><script>throw new Error('not searchable')</script><style>.hidden { display: none; }</style></head><body><h1>Northwind field notes</h1><p>The owner approved the staged migration on 14 May.</p></body></html>").map_err(to_string)?;
     fs::write(directory.join("project-mail.mbox"), "From arun@example.test Tue May 14 09:12:00 2026\nSubject: Re: Northwind approval\n\nThe approval for MAPLE-742 is in the migration plan. Keep the original export until validation.\n").map_err(to_string)?;
+    fs::write(directory.join("handoff.txt"), "Plain-text handoff: the Northwind custodian is Mira Sen.\n").map_err(to_string)?;
+    fs::write(directory.join("evidence.pdf"), simple_text_pdf("PDF evidence record: MAPLE-742 was approved on 14 May.", None)).map_err(to_string)?;
     Ok(directory)
 }
 
@@ -251,10 +253,14 @@ fn refresh_all(state: State<AppState>) -> Result<(), String> {
 fn remove_source(path: String, state: State<AppState>) -> Result<(), String> {
     {
         let mut data = state.data.lock().map_err(to_string)?;
-        data.sources.retain(|source| source.path != path);
-        data.documents.retain(|document| document.source_path != path);
+        remove_source_from_index(&mut data, &path);
     }
     state.persist()
+}
+
+fn remove_source_from_index(data: &mut IndexData, path: &str) {
+    data.sources.retain(|source| source.path != path);
+    data.documents.retain(|document| document.source_path != path);
 }
 
 #[tauri::command]
@@ -296,14 +302,18 @@ fn results_as_csv(results: &[SearchResult]) -> String {
     output
 }
 
+fn export_results_to_path(query: &str, kind: Option<&str>, source: Option<&str>, path: &Path, data: &IndexData) -> Result<usize, String> {
+    if query.trim().is_empty() { return Err("Enter a search before exporting results".into()); }
+    let results = search_documents(query, kind, source, data);
+    atomic_write(path, results_as_csv(&results).as_bytes())?;
+    Ok(results.len())
+}
+
 #[tauri::command]
 fn export_results(query: String, kind: Option<String>, source: Option<String>, path: String, state: State<AppState>) -> Result<usize, String> {
     if *state.locked.lock().map_err(to_string)? { return Err("Unlock the encrypted index first".into()); }
-    if query.trim().is_empty() { return Err("Enter a search before exporting results".into()); }
     let data = state.data.lock().map_err(to_string)?;
-    let results = search_documents(&query, kind.as_deref(), source.as_deref(), &data);
-    atomic_write(Path::new(&path), results_as_csv(&results).as_bytes())?;
-    Ok(results.len())
+    export_results_to_path(&query, kind.as_deref(), source.as_deref(), Path::new(&path), &data)
 }
 
 #[tauri::command]
@@ -357,20 +367,85 @@ fn parse_file(path: &Path, source_path: &str) -> Result<Vec<Document>, String> {
 
 fn extract_pdf_isolated(path: &Path) -> Result<String, String> {
     let executable = std::env::current_exe().map_err(to_string)?;
-    let mut child = Command::new(executable).arg("--extract-pdf").arg(path).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().map_err(to_string)?;
+    let mut command = Command::new(executable);
+    command.arg("--extract-pdf").arg(path);
+    extract_pdf_from_worker(&mut command)
+}
+
+fn extract_pdf_from_worker(command: &mut Command) -> Result<String, String> {
+    let output = run_child_with_timeout(&mut *command, Duration::from_secs(12))?;
+    if !output.success { return Err(String::from_utf8_lossy(&output.stderr).trim().to_string()); }
+    serde_json::from_slice(&output.stdout).map_err(|_| "PDF parser returned invalid output".into())
+}
+
+#[derive(Debug)]
+struct ChildOutput { success: bool, stdout: Vec<u8>, stderr: Vec<u8> }
+
+fn run_child_with_timeout(command: &mut Command, timeout: Duration) -> Result<ChildOutput, String> {
+    let mut child = command.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().map_err(to_string)?;
+    let stdout = child.stdout.take().ok_or("PDF parser stdout was unavailable")?;
+    let stderr = child.stderr.take().ok_or("PDF parser stderr was unavailable")?;
+    let stdout_reader = thread::spawn(move || { let mut bytes = Vec::new(); let mut pipe = stdout; pipe.read_to_end(&mut bytes).map(|_| bytes) });
+    let stderr_reader = thread::spawn(move || { let mut bytes = Vec::new(); let mut pipe = stderr; pipe.read_to_end(&mut bytes).map(|_| bytes) });
     let started = Instant::now();
-    loop {
+    let status = loop {
         if let Some(status) = child.try_wait().map_err(to_string)? {
-            let output = child.wait_with_output().map_err(to_string)?;
-            if !status.success() { return Err(String::from_utf8_lossy(&output.stderr).trim().to_string()); }
-            return serde_json::from_slice(&output.stdout).map_err(|_| "PDF parser returned invalid output".into());
+            break status;
         }
-        if started.elapsed() > Duration::from_secs(12) { let _ = child.kill(); return Err("PDF parser exceeded the 12 second safety limit".into()); }
+        if started.elapsed() > timeout {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = stdout_reader.join();
+            let _ = stderr_reader.join();
+            return Err("PDF parser exceeded the 12 second safety limit".into());
+        }
         thread::sleep(Duration::from_millis(25));
-    }
+    };
+    let stdout = stdout_reader.join().map_err(|_| "PDF parser stdout reader stopped".to_string())?.map_err(to_string)?;
+    let stderr = stderr_reader.join().map_err(|_| "PDF parser stderr reader stopped".to_string())?.map_err(to_string)?;
+    Ok(ChildOutput { success: status.success(), stdout, stderr })
 }
 
 pub fn extract_pdf_worker(path: &str) -> Result<String, String> { pdf_extract::extract_text(path).map_err(|error| format!("PDF parser: {error}")) }
+
+fn simple_text_pdf(text: &str, target_bytes: Option<usize>) -> Vec<u8> {
+    let escaped = text.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)");
+    let content = format!("BT\n/F1 10 Tf\n40 800 Td\n12 TL\n({}) Tj\nET\n", escaped.replace('\n', ") Tj T*\n("));
+    let objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_string(),
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>".to_string(),
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_string(),
+        format!("<< /Length {} >>\nstream\n{}endstream", content.len(), content),
+    ];
+    let build = |padding: usize| {
+        let mut bytes = b"%PDF-1.4\n".to_vec();
+        let mut offsets = vec![0usize];
+        for (index, object) in objects.iter().enumerate() {
+            offsets.push(bytes.len());
+            bytes.extend_from_slice(format!("{} 0 obj\n{}\nendobj\n", index + 1, object).as_bytes());
+        }
+        if padding >= 3 {
+            bytes.push(b'%');
+            bytes.resize(bytes.len() + padding - 1, b' ');
+            bytes.push(b'\n');
+        }
+        let xref = bytes.len();
+        bytes.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", offsets.len()).as_bytes());
+        for offset in offsets.iter().skip(1) { bytes.extend_from_slice(format!("{offset:010} 00000 n \n").as_bytes()); }
+        bytes.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", offsets.len()).as_bytes());
+        bytes
+    };
+    let Some(target) = target_bytes else { return build(0); };
+    let mut padding = target.saturating_sub(build(0).len());
+    for _ in 0..4 {
+        let candidate = build(padding);
+        if candidate.len() == target { return candidate; }
+        if candidate.len() < target { padding += target - candidate.len(); }
+        else { padding = padding.saturating_sub(candidate.len() - target); }
+    }
+    build(padding)
+}
 
 fn strip_html(input: &str) -> String {
     let mut result = String::with_capacity(input.len()); let mut in_tag = false; let mut last_space = false; let mut hidden_tag: Option<String> = None;
@@ -427,6 +502,7 @@ fn make_snippet(body: &str, terms: &[String]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn extracts_html_without_markup() {
@@ -456,18 +532,168 @@ mod tests {
     }
 
     #[test]
-    fn exports_quoted_csv_with_each_result() {
-        let result = SearchResult { id: "1".into(), title: "Northwind, plan".into(), path: "/archive/northwind.md".into(), open_path: "/archive/northwind.md".into(), source_path: "/archive".into(), kind: "markdown".into(), snippet: "MAPLE-742".into(), extracted_at: Utc::now(), modified_at: None, score: 1 };
-        let csv = results_as_csv(&[result]);
+    #[doc = "@claim:csv-export"]
+    fn claim_csv_export_writes_public_result_file() {
+        let document = Document { id: "1".into(), title: "Northwind, plan".into(), path: "/archive/northwind.md".into(), source_path: "/archive".into(), kind: "markdown".into(), body: "MAPLE-742".into(), extracted_at: Utc::now(), modified_at: None };
+        let data = IndexData { documents: vec![document], ..Default::default() };
+        let directory = tempdir().unwrap();
+        let path = directory.path().join("results.csv");
+        assert_eq!(export_results_to_path("MAPLE-742", None, None, &path, &data).unwrap(), 1);
+        let csv = fs::read_to_string(path).unwrap();
         assert!(csv.starts_with("title,path,type,snippet,extracted_at\n"));
         assert!(csv.contains("\"Northwind, plan\""));
+        assert_eq!(csv.lines().count(), 2);
     }
 
     #[test]
-    fn result_open_path_is_the_record_not_its_source_root() {
+    #[doc = "@claim:exact-source-open"]
+    fn claim_exact_source_open_uses_record_path() {
         let document = Document { id: "1".into(), title: "A".into(), path: "/archive/notes/fact.md".into(), source_path: "/archive".into(), kind: "markdown".into(), body: "MAPLE-742".into(), extracted_at: Utc::now(), modified_at: None };
         let result = search_documents("MAPLE-742", None, None, &IndexData { documents: vec![document], ..Default::default() });
         assert_eq!(result[0].open_path, "/archive/notes/fact.md");
+    }
+
+    #[test]
+    #[doc = "@claim:five-formats"]
+    fn claim_five_formats_are_ingested_and_searchable() {
+        let directory = tempdir().unwrap();
+        let fixtures = [
+            ("note.md", "# Markdown proof\nFORMAT_MARKDOWN"),
+            ("note.txt", "FORMAT_TEXT"),
+            ("note.html", "<p>FORMAT_HTML</p><script>FORMAT_SCRIPT_SECRET</script>"),
+            ("note.mbox", "From test@example.test Tue May 14\nSubject: Mail proof\n\nFORMAT_MAIL"),
+        ];
+        for (name, body) in fixtures { fs::write(directory.path().join(name), body).unwrap(); }
+        let pdf_path = directory.path().join("note.pdf");
+        fs::write(&pdf_path, simple_text_pdf("FORMAT_PDF", None)).unwrap();
+        let pdf_body = extract_pdf_worker(pdf_path.to_str().unwrap()).unwrap();
+        fs::remove_file(&pdf_path).unwrap();
+        let (documents, errors) = scan_source(directory.path()).unwrap();
+        assert!(errors.is_empty(), "{errors:?}");
+        let searchable: Vec<_> = documents.iter().map(|document| (document.kind.as_str(), document.body.as_str())).collect();
+        assert!(searchable.iter().any(|(kind, body)| *kind == "markdown" && body.contains("FORMAT_MARKDOWN")));
+        assert!(searchable.iter().any(|(kind, body)| *kind == "text" && body.contains("FORMAT_TEXT")));
+        assert!(searchable.iter().any(|(kind, body)| *kind == "html" && body.contains("FORMAT_HTML") && !body.contains("FORMAT_SCRIPT_SECRET")));
+        assert!(searchable.iter().any(|(kind, body)| *kind == "mail" && body.contains("FORMAT_MAIL")));
+        assert!(pdf_body.contains("FORMAT_PDF"));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn pdf_worker_drains_large_child_output_without_deadlock() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "head -c 318930 /dev/zero"]);
+        let started = Instant::now();
+        let output = run_child_with_timeout(&mut command, Duration::from_secs(3)).unwrap();
+        assert!(output.success);
+        assert_eq!(output.stdout.len(), 318_930);
+        assert!(started.elapsed() < Duration::from_secs(3));
+    }
+
+    #[test]
+    fn pdf_worker_drains_valid_511kb_text_payload_without_deadlock() {
+        let directory = tempdir().unwrap();
+        let path = directory.path().join("large-text.pdf");
+        let text = (0..2_600).map(|index| format!("Archive fact MAPLE-742 record {index} preserves the original source trail and extraction timestamp for private local search.")).collect::<Vec<_>>().join("\n");
+        let fixture = simple_text_pdf(&text, Some(511 * 1024));
+        assert_eq!(fixture.len(), 511 * 1024);
+        fs::write(&path, fixture).unwrap();
+        let worker_output = serde_json::to_vec(&extract_pdf_worker(path.to_str().unwrap()).unwrap()).unwrap();
+        assert!(worker_output.len() > 300_000, "fixture must exceed a typical child pipe buffer");
+        let output_path = directory.path().join("worker-output.json");
+        fs::write(&output_path, worker_output).unwrap();
+        let mut command = Command::new("sh");
+        command.args(["-c", "cat \"$1\"", "pdf-worker", output_path.to_str().unwrap()]);
+        let started = Instant::now();
+        let extracted = extract_pdf_from_worker(&mut command).unwrap();
+        assert!(extracted.len() > 300_000);
+        assert!(extracted.contains("MAPLE-742"));
+        assert!(started.elapsed() < Duration::from_secs(12));
+    }
+
+    #[test]
+    #[doc = "@claim:source-removal"]
+    fn claim_removing_source_keeps_original_files() {
+        let directory = tempdir().unwrap();
+        let original = directory.path().join("keep-me.txt");
+        fs::write(&original, "original record").unwrap();
+        let source = directory.path().to_string_lossy().to_string();
+        let mut data = IndexData {
+            sources: vec![SourceRecord { path: source.clone(), document_count: 1, last_indexed: None, errors: vec![] }],
+            documents: vec![Document { id: "1".into(), title: "keep me".into(), path: original.to_string_lossy().to_string(), source_path: source.clone(), kind: "text".into(), body: "original record".into(), extracted_at: Utc::now(), modified_at: None }],
+            last_indexed: None,
+        };
+        remove_source_from_index(&mut data, &source);
+        assert!(data.sources.is_empty() && data.documents.is_empty());
+        assert_eq!(fs::read_to_string(original).unwrap(), "original record");
+    }
+
+    #[test]
+    #[doc = "@claim:encrypted-index"]
+    fn claim_encrypted_storage_hides_paths_and_text_and_rejects_wrong_password() {
+        let plain = br#"{"path":"/private/archive.md","body":"MAPLE-742"}"#;
+        let envelope = encrypt_bytes(plain, "correct horse battery").unwrap();
+        let stored = serde_json::to_vec(&envelope).unwrap();
+        assert!(!stored.windows(b"/private/archive.md".len()).any(|part| part == b"/private/archive.md"));
+        assert!(!stored.windows(b"MAPLE-742".len()).any(|part| part == b"MAPLE-742"));
+        assert_eq!(decrypt_bytes(&envelope, "correct horse battery").unwrap(), plain);
+        assert!(decrypt_bytes(&envelope, "wrong password").is_err());
+    }
+
+    #[test]
+    #[doc = "@claim:parser-limits"]
+    fn claim_parser_limits_reject_oversize_and_timeout_workers() {
+        let directory = tempdir().unwrap();
+        let path = directory.path().join("too-large.txt");
+        let file = fs::File::create(&path).unwrap();
+        file.set_len(MAX_FILE_BYTES + 1).unwrap();
+        assert!(parse_file(&path, directory.path().to_str().unwrap()).unwrap_err().contains("larger than 25 MB"));
+        #[cfg(unix)] {
+            let mut command = Command::new("sh");
+            command.args(["-c", "sleep 2"]);
+            assert!(run_child_with_timeout(&mut command, Duration::from_millis(40)).unwrap_err().contains("12 second safety limit"));
+        }
+    }
+
+    #[test]
+    #[doc = "@claim:attachments-closed"]
+    fn claim_attachments_are_not_decoded_or_opened() {
+        let input = "From sender@example.test Tue May 14\nSubject: Export\nContent-Type: multipart/mixed; boundary=x\n\n--x\nContent-Type: text/plain\n\nVisible body\n--x\nContent-Disposition: attachment; filename=secret.txt\nContent-Transfer-Encoding: base64\n\nQVRUQUNITUVOVF9TRUNSRVQ=\n--x--";
+        let documents = parse_mbox(input, Path::new("mail.mbox"), "/archive", Utc::now(), None);
+        assert_eq!(documents.len(), 1);
+        assert!(!documents[0].body.contains("ATTACHMENT_SECRET"));
+    }
+
+    #[test]
+    #[doc = "@claim:retrieval-benchmark"]
+    fn claim_retrieval_benchmark_finds_at_least_80_percent() {
+        let documents = (0..50).map(|index| Document { id: index.to_string(), title: format!("Record {index}"), path: format!("/archive/record-{index}.txt"), source_path: "/archive".into(), kind: "text".into(), body: format!("Known fact TOKEN-{index:02} belongs to record {index}"), extracted_at: Utc::now(), modified_at: None }).collect();
+        let data = IndexData { documents, ..Default::default() };
+        let found = (0..50).filter(|index| search_documents(&format!("TOKEN-{index:02}"), None, None, &data).first().is_some_and(|result| result.id == index.to_string())).count();
+        assert!(found >= 40, "found {found}/50 known source records");
+    }
+
+    #[test]
+    #[doc = "@claim:session-password"]
+    fn claim_encryption_password_is_not_restored_with_the_index() {
+        let directory = tempdir().unwrap();
+        fs::write(directory.path().join("index.enc"), b"encrypted index fixture").unwrap();
+        let state = AppState::load(directory.path().to_path_buf());
+        assert!(*state.encrypted.lock().unwrap());
+        assert!(*state.locked.lock().unwrap());
+        assert!(state.password.lock().unwrap().is_none());
+    }
+
+    #[test]
+    #[doc = "@claim:desktop-local-processing"]
+    fn claim_desktop_core_has_no_network_client_llm_or_archive_endpoint() {
+        let runtime = include_str!("lib.rs");
+        assert!(!runtime.contains(&["http", "://"].concat()));
+        assert!(!runtime.contains(&["https", "://"].concat()));
+        let manifest = include_str!("../Cargo.toml");
+        for package in ["reqwest", "ureq", "hyper", "surf", "http-client", "openai", "anthropic"] {
+            assert!(!manifest.contains(package), "unexpected remote-service dependency: {package}");
+        }
     }
 }
 

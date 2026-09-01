@@ -1,16 +1,9 @@
+import { currentPlatform } from "./platform";
+
 type GithubRelease = { tag_name: string; assets: Array<{ name: string; browser_download_url: string }> };
 
-function platform(): { os: string; arch: string; label: string; format: string[] } {
-  const value = `${navigator.userAgent} ${navigator.platform}`.toLowerCase();
-  const arch = value.includes("arm") || value.includes("aarch64") ? "arm64" : "x86_64";
-  if (value.includes("win")) return { os: "windows", arch: "x86_64", label: "Windows", format: ["exe", "msi"] };
-  if (value.includes("mac")) return { os: "macos", arch, label: "macOS", format: ["dmg"] };
-  if (value.includes("linux")) return { os: "linux", arch: "x86_64", label: "Linux", format: ["AppImage", "deb"] };
-  return { os: "", arch, label: "your computer", format: [] };
-}
-
 async function resolveDownload(): Promise<void> {
-  const detected = platform();
+  const detected = await currentPlatform();
   const button = document.querySelector<HTMLAnchorElement>("#primary-download")!;
   const note = document.querySelector("#download-note")!;
   if (!detected.os) return;
