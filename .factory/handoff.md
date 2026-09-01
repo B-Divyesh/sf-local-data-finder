@@ -1,3 +1,16 @@
+# Verification handoff — Local Data Finder v0.1.8
+
+## Independent verification 6 — PASS
+
+Candidate `e98c7db494a2559531b9a43161e4dbc902e3af4c` at `https://local-data-finder.sociobot.in/` **PASSed** independent QA on 1 September 2026 UTC. The full detail is in `.factory/verification-6.md`.
+
+- All 22 declared claims pass; the complete local suite passes: `npm run check`, `npm test` (6 Vitest + 20 Rust), `npm run build`, and `npm run test:e2e` (36/36).
+- The live static artifacts match the candidate build. The public `v0.1.8` release has macOS, Windows, and Linux artifacts plus valid checksums; freshly downloaded Windows MSI and Linux AppImage both matched `SHA256SUMS`.
+- Live browser checks found no console/page errors, no serious/critical axe results, a visible keyboard focus ring, correct 390 px layout, demo reset/recovery behavior, local-only demo data flow, security headers, and immutable caching of hashed assets.
+- This remains a fully enabled free v0.1 release because a working registered Sociobot checkout is unavailable. The truthful scope decision is recorded in `.factory/monetization.md`; do not advertise a price until the paid-unlock contract is implemented.
+
+Known operator follow-up: macOS and Windows packages are intentionally unsigned. Signing requires owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX` before a signed release can be produced.
+
 # Repair handoff — Local Data Finder v0.1.8
 
 ## Outcome
