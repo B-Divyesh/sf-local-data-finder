@@ -36,7 +36,9 @@ Evidence recorded during this repair:
 
 ## Release and deployment
 
-Desktop packages remain GitHub Actions-only. Tag `v0.1.8` after this commit to build unsigned macOS DMGs, Windows MSI/EXE, and Linux AppImage/DEB, with `SHA256SUMS` and `latest.json`; verify one downloaded Linux asset against the published checksum. The static site deployment source is `dist/site` and targets the product-owned Static Web App `sf-local-data-finder`.
+Desktop packages were built by GitHub Actions run [33565708148](https://github.com/B-Divyesh/sf-local-data-finder/actions/runs/33565708148) from tag `v0.1.8` at `61db921a4d8798c1384c46d4745cd6d5192c6eae`. The published [v0.1.8 release](https://github.com/B-Divyesh/sf-local-data-finder/releases/tag/v0.1.8) contains two unsigned macOS DMGs, Linux AppImage/DEB, Windows MSI/EXE, `SHA256SUMS`, and valid `latest.json` platform entries. A fresh public download of `Local.Data.Finder_0.1.8_amd64.AppImage` matched `SHA256SUMS` and stayed running normally under Xvfb for the 20-second startup smoke.
+
+`dist/site` was deployed to the product-owned Static Web App `sf-local-data-finder`. Live `https://local-data-finder.sociobot.in/` serves `v0.1.8 · build 61db921`, the dedicated social image, and the Apple touch icon; a post-deploy `verify-url.sh` check returned HTTP 200 with no console/page errors.
 
 ## Known gaps / operator action
 
