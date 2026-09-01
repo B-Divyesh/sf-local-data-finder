@@ -1,22 +1,20 @@
-# Repair handoff — Local Data Finder
+# Verification handoff — Local Data Finder
 
 ## Status
 
-Repair complete for independent verification report `d11edcd202bd9cba6271a69f435146c860af36d9` against candidate `0fc66f02ac7605f4a968accb94e5747d9d3b0565`.
+**FAIL** for candidate `ad39f28c892571f9446dfc952f118b3b7aca4898` at `https://local-data-finder.sociobot.in`, independently verified 1 September 2026 UTC.
 
-## What changed
+The candidate repository gates pass and the live static site exactly matches the candidate build. The live desktop download does not: it remains v0.1.5 from commit `ebb45743bf45e4086db7d14946c384e30dc3947a`, before the candidate's core and desktop repairs.
 
-- Reworked the claims contract in `.factory/claims.json`. It now has 13 executable checks for every material published statement: demo isolation, local processing, all five formats, CSV export, exact source paths, closed mail attachments, source removal, encrypted storage, session-only passwords, parser limits, the 50-query retrieval threshold, and published SHA256 checksums.
-- Fixed the PDF worker deadlock. `run_child_with_timeout` now drains stdout and stderr concurrently while it waits, so a valid 511 KiB text-rich PDF payload does not fill a child pipe and reach the timeout. Two regressions cover a 318,930-byte child output and a valid 511 KiB PDF worker JSON payload.
-- Corrected System-theme light chrome by using light `--chrome` and `--rail` tokens under the system light media query. The desktop app regression runs axe in System/light mode.
-- Restored correct demo state communication: `[hidden]` now wins over the banner flex rule, and all demo transitions rerender the banner. Fresh real mode and **Start for real** no longer show sample-only controls.
-- Made the 390 px sources drawer a real modal drawer: it is hidden and inert when closed; opening updates `aria-expanded`, moves focus to Close sources, provides `role="dialog"`/`aria-modal`, traps Tab focus, supports Escape/backdrop close, and restores focus to the trigger.
-- Corrected the Settings encryption button to name the action it will take, and updated macOS download detection to prefer the native Apple-silicon asset for browsers that report `MacIntel`.
-- Replaced static-demo “Open source” text with “Source trail” so a non-operable sample label is not presented as an action.
+## Release blockers
 
-## Verification
+1. Publish new macOS, Windows, and Linux assets from the accepted candidate. The current v0.1.5 AppImage still shows the demo banner in real mode and retains the broken System/light chrome; the tag also predates the PDF pipe, mobile drawer, and encryption-label repairs.
+2. Fix the browser demo's hidden result. A non-match sets `hidden` on `#sample-result`, but `.demo-result { display: grid }` keeps it visible while the status says no result matched. Strengthen `@claim:demo-sandbox` to assert the result actually disappears.
+3. Give `/demo/` the required persistent demo banner and functional **Start for real** path.
+4. Complete `.factory/claims.json` for every published claim and make the desktop demo claim exercise isolated desktop storage and cleanup. Complete `.factory/copy-audit.md`; it currently lists only five landing sentences.
+5. Bring the demo input, skip link, and narrow text links to 44×44 CSS pixels and add the required three-to-five-frame captioned desktop walkthrough.
 
-Clean install and quality gates completed locally on 1 September 2026:
+## Verification completed
 
 ```sh
 npm ci
@@ -28,34 +26,22 @@ npm run test:e2e
 npm audit --audit-level=high
 ```
 
-Results:
+- Every one of the 13 exact `.factory/claims.json` commands passes after the documented Tauri Linux prerequisites are installed.
+- Full results: 4 Vitest tests, 16 Rust tests, and 22 Playwright checks pass.
+- Production build outputs `dist/app` and `dist/site` within all JS/CSS/image budgets.
+- All 18 served static files match the fresh candidate build byte-for-byte.
+- Live desktop/390 px, keyboard focus, reduced motion, axe, request log, security headers, caching, service-worker update/offline reload, links, and invalid demo inputs were checked.
+- Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1.0 s, TBT 40 ms, CLS 0.
+- The v0.1.5 Linux AppImage checksum matches and it launches, but it is the wrong commit.
 
-- `npm ci`: 105 packages audited; 0 vulnerabilities.
-- `npm run lint`: pass.
-- `npm run check`: pass (TypeScript and Cargo).
-- `npm test`: pass (4 Vitest tests; 16 Rust tests).
-- `npm run build`: pass; produced `dist/app` and `dist/site`. App initial JS is 18.55 kB raw / 6.58 kB gzip; site JS is 2.18 kB raw / 1.11 kB gzip; site CSS is 10.87 kB raw / 3.07 kB gzip.
-- `npm run test:e2e`: pass, 22 checks across desktop Chromium and a 390×844 mobile viewport. This includes axe serious/critical checks, System/light contrast regression, demo-state regression, modal-drawer keyboard/focus regression, reduced browser privacy checks, offline behavior, and legal-route keyboard navigation.
-- Every exact command in `.factory/claims.json`: pass.
-- `npm audit --audit-level=high`: 0 vulnerabilities.
-- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173/ <temporary-evidence-dir>`: pass; HTTP 200 in 609 ms, no console/page errors, title/lang/one h1/main present, zero images without alt text, and zero unlabeled buttons.
+Full evidence and severity details are in `.factory/verification-3.md`.
 
-The standalone `@axe-core/cli` command could not run because its Selenium launcher cannot locate a system Chrome binary in this container. Equivalent axe coverage uses the preinstalled Playwright Chromium and passed in the 22-check browser suite.
+## Applicability
 
-## Run and deploy
+There is no product backend, paid-unlock request, or sign-in flow. API request allowance/429 and Entra checks do not apply. No out-of-scope service, setting, secret, database, or infrastructure resource was read or changed.
 
-```sh
-npm ci
-npm run build
-npm run test:e2e
-```
+## Operator action after fixes
 
-This remains a Tauri 2 desktop application with a static site in `dist/site`. The repository release workflow remains responsible for macOS, Windows, and Linux release artifacts.
-
-Repair commit `61f5758` was pushed to `main`. The scoped live URL was checked after the push; it still served the 30 August artifact (`Last-Modified: Sun, 30 Aug 2026 07:11:56 GMT`) and the former `Open source` sample label. This repository has no static-deployment workflow to invoke, so the factory static-deployment controller needs to publish the pushed `dist/site` artifact before live verification can be repeated.
-
-## Known gaps / operator action
-
-- This worker does not create release tags or platform binaries; GitHub Actions builds unsigned desktop artifacts from tags as documented in `.github/workflows/release.yml`.
-- No signing certificates are configured. macOS and Windows packages remain unsigned as disclosed on the landing page.
-- Static deployment is pending the factory controller; it was not live during the post-push monitor window.
+- Tag the repaired commit with a new version to trigger `.github/workflows/release.yml`.
+- Confirm every platform asset, `SHA256SUMS`, and `latest.json` belongs to that tag before updating the site's detected-platform download.
+- macOS and Windows packages remain unsigned until the operator supplies the signing certificates documented by the release process.
