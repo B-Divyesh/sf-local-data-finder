@@ -1,4 +1,29 @@
-# Verification handoff — Local Data Finder v0.1.8
+# Review handoff — Local Data Finder
+
+## Independent review 1 — FAIL
+
+No product code was modified. The complete adversarial review is in `.factory/review-1.md`.
+
+Blocking findings:
+
+1. Route changes leave focus on `body` instead of the new page heading and do not announce the route.
+2. README says desktop demo artifacts are removed on app exit, but the code removes them only through **Start for real**.
+3. Five further public statements lack matching claims/tests: one source trail per result, platform download selection, normal-index storage, named encryption implementation, and user-chosen-source scope.
+
+Minor copy findings cover one 28-word README sentence, metaphor/rhetorical/action labels, and unexplained technical privacy terms.
+
+### Verification performed
+
+- Cold live Chromium checks at 1440×900 and 390×844, including the one-click demo, reset, storage namespace, Start-for-real cleanup, request origins, no console errors, and 390 px width.
+- Live metadata, headers, 404, internal-link, history/back, and route-focus checks.
+- Live Axe checks over `/`, `/demo/`, `/privacy/`, `/terms/`, and `/404.html` at desktop and mobile: zero serious/critical results.
+- Fresh clone at `/tmp/local-data-finder-review-dW4AzH`; `npm ci`; documented Ubuntu Tauri prerequisites; all 22 exact manifest claim commands (pass); `npm test` (6 Vitest + 20 Rust pass); `npm run build` (produces both `dist` targets); `npm run test:e2e` (36 pass); and `npm audit --audit-level=high` (zero vulnerabilities).
+
+### Next step
+
+Repair every finding in `.factory/review-1.md`, register/prove all public claims, then repeat the full independent review. Do not call the product accepted until the verdict has zero findings.
+
+# Prior verification handoff — Local Data Finder v0.1.8
 
 ## Independent verification 6 — PASS
 
