@@ -37,4 +37,6 @@ document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => 
 }));
 
 void resolveDownload();
-if ("serviceWorker" in navigator && location.protocol === "https:") void navigator.serviceWorker.register("/sw.js");
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "127.0.0.1" || location.hostname === "localhost")) {
+  void navigator.serviceWorker.register("/sw.js");
+}

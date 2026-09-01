@@ -46,3 +46,25 @@ describe("published release integrity", () => {
     expect(powershellInstaller).toContain('$actual -ne $asset.sha256.ToLowerInvariant()');
   });
 });
+
+describe("published product copy", () => {
+  it("@claim:free-download presents the desktop app as free without a payment gate", async () => {
+    const landing = await readFile("site/index.html", "utf8");
+    const productFiles = await Promise.all(["site", "src-tauri", "public"].map(async (directory) => {
+      const { stdout } = await run("rg", ["-l", "api/v1/products|/checkout|dodo|stripe", directory], { cwd: process.cwd() }).catch(() => ({ stdout: "" }));
+      return stdout;
+    }));
+    expect(landing).toContain("Free to download");
+    expect(productFiles.join("").trim()).toBe("");
+  });
+
+  it("@claim:unsigned-builds discloses unsigned desktop releases", async () => {
+    const [landing, workflow] = await Promise.all([
+      readFile("site/index.html", "utf8"),
+      readFile(".github/workflows/release.yml", "utf8")
+    ]);
+    expect(landing).toContain("v0.1 builds are unsigned.");
+    expect(workflow).not.toContain("APPLE_CERTIFICATE");
+    expect(workflow).not.toContain("WINDOWS_CERT_PFX");
+  });
+});

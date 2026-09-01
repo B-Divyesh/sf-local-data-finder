@@ -1,24 +1,52 @@
 [
   {
     "id": "demo-sandbox",
-    "claim": "Try the product with isolated sample data that can be reset.",
+    "claim": "Try the product with sample data that is searchable, hides a non-match, and can be reset.",
     "where": "Landing first action, /demo/, README, and desktop first-run screen",
     "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
-    "sandbox": "Fresh browser context opens /demo/, searches a non-match, then resets to MAPLE-742."
+    "sandbox": "Fresh browser context opens /demo/, searches a non-match, asserts the result has display:none, then resets to MAPLE-742."
   },
   {
-    "id": "local-first-site",
-    "claim": "The browser demo does not send archive data to another origin.",
-    "where": "/demo/ and Privacy",
-    "test": "npm run test:e2e -- --grep @claim:local-first-site",
-    "sandbox": "Fresh browser context records every request while loading and searching the sample."
+    "id": "demo-browser-storage",
+    "claim": "The browser demo uses a separate demo storage key and Start for real clears it.",
+    "where": "/demo/ banner and Privacy",
+    "test": "npm run test:e2e -- --grep @claim:demo-browser-storage",
+    "sandbox": "Fresh browser context searches the demo, observes only demo:local-data-finder:query, chooses Start for real, and asserts that key is absent."
+  },
+  {
+    "id": "desktop-demo-isolation",
+    "claim": "The desktop sample uses demo-index.json and demo-sample, keeps the normal index intact, and Start for real removes both demo artifacts.",
+    "where": "Desktop first-run screen, /demo/, Privacy, README, and .factory/demo.md",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_desktop_demo_storage_is_isolated_and_discarded",
+    "sandbox": "Temporary app-data directory contains a normal index plus demo artifacts; the test persists demo data, discards it, and checks the normal index remains byte-for-byte unchanged."
+  },
+  {
+    "id": "website-privacy",
+    "claim": "The static site loads no advertising, tracking pixels, third-party fonts, or analytics SDKs.",
+    "where": "Privacy",
+    "test": "npm run test:e2e -- --grep @claim:website-privacy",
+    "sandbox": "Fresh browser context records every request during a demo search and permits only the site origin."
+  },
+  {
+    "id": "offline-reload",
+    "claim": "The sample demo works offline after the first visit.",
+    "where": "Landing first-screen fact and .factory/demo.md",
+    "test": "npm run test:e2e -- --grep @claim:offline-reload",
+    "sandbox": "A dedicated fresh browser context visits and service-worker-caches /demo/, goes offline, reloads, and asserts the demo heading remains visible."
   },
   {
     "id": "desktop-local-processing",
-    "claim": "The desktop core has no network client, LLM, or archive service endpoint.",
+    "claim": "Desktop search runs locally and works without a network client, LLM, or archive service endpoint.",
     "where": "Landing privacy section, desktop settings, Privacy, and README",
     "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_desktop_core_has_no_network_client_llm_or_archive_endpoint",
     "sandbox": "Compiled desktop-core source and runtime dependencies are checked for network clients and archive endpoints."
+  },
+  {
+    "id": "free-download",
+    "claim": "The desktop app is free to download.",
+    "where": "Landing first-screen fact",
+    "test": "npm run test:web -- --testNamePattern @claim:free-download",
+    "sandbox": "The product copy is checked for the free-download statement and shipped product code is checked for the absence of a checkout or payment integration."
   },
   {
     "id": "five-formats",
@@ -26,6 +54,20 @@
     "where": "Landing how-it-works section and README",
     "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_five_formats_are_ingested_and_searchable",
     "sandbox": "Temporary fixtures for all five formats are parsed; HTML script text is excluded and each searchable body is asserted."
+  },
+  {
+    "id": "source-selection",
+    "claim": "Hidden folders and unsupported files are skipped.",
+    "where": "Landing how-it-works section",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_hidden_and_unsupported_files_are_skipped",
+    "sandbox": "A temporary source contains a visible text file, a dotfile, and an unsupported CSV; only the visible supported file is indexed."
+  },
+  {
+    "id": "source-scope-feedback",
+    "claim": "Each indexed source shows its record count, extraction time, and parser errors.",
+    "where": "Landing privacy section and desktop source rail",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_source_status_reports_counts_times_and_parser_errors",
+    "sandbox": "A source with one readable record and one oversized file is scanned; its status records count, time, and the parser limit error."
   },
   {
     "id": "csv-export",
@@ -42,6 +84,13 @@
     "sandbox": "A nested record is searched and its result open path is asserted to be the record itself."
   },
   {
+    "id": "open-source-os",
+    "claim": "Opening a source uses your operating system.",
+    "where": "Privacy",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_open_source_delegates_to_the_operating_system",
+    "sandbox": "The desktop command is checked to use Tauri's native opener plugin rather than an internal viewer or web request."
+  },
+  {
     "id": "attachments-closed",
     "claim": "Mail attachments stay closed.",
     "where": "Landing how-it-works section and README",
@@ -51,7 +100,7 @@
   {
     "id": "source-removal",
     "claim": "Removing a source does not delete the original.",
-    "where": "Landing privacy section and Privacy",
+    "where": "Landing privacy section, Privacy, and README",
     "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_removing_source_keeps_original_files",
     "sandbox": "Removing a source clears index records while the original temporary file remains unchanged."
   },
@@ -89,5 +138,19 @@
     "where": "Landing install section and README",
     "test": "npm run test:web -- --testNamePattern @claim:published-checksums",
     "sandbox": "Temporary release assets produce SHA256SUMS/latest.json, and both installer scripts contain the hash comparison."
+  },
+  {
+    "id": "unsigned-builds",
+    "claim": "v0.1 desktop builds are unsigned and the landing page says how to open them.",
+    "where": "Landing install section and README",
+    "test": "npm run test:web -- --testNamePattern @claim:unsigned-builds",
+    "sandbox": "The landing warning and release workflow are checked together: the workflow has no macOS or Windows signing certificate configuration."
+  },
+  {
+    "id": "desktop-walkthrough",
+    "claim": "The landing page includes a three-frame captioned desktop walkthrough.",
+    "where": "Landing desktop walkthrough",
+    "test": "npm run test:e2e -- --grep @claim:desktop-walkthrough",
+    "sandbox": "A fresh browser context opens the landing page and asserts three visible images with three captions."
   }
 ]

@@ -33,12 +33,24 @@ test("@claim:demo-sandbox the demo is one click, searchable, and resettable", as
   const query = page.locator("#demo-query");
   await query.fill("not in the sample");
   await expect(page.getByText(/No sample record matched/)).toBeVisible();
+  await expect(page.locator("#sample-result")).toBeHidden();
+  await expect(page.locator("#sample-result")).toHaveCSS("display", "none");
   await page.getByRole("button", { name: "Reset demo" }).click();
   await expect(query).toHaveValue("MAPLE-742");
+  await expect(page.locator("#sample-result")).toBeVisible();
   await expect(page.getByText(/Demo reset. One sample result found/)).toBeVisible();
 });
 
-test("@claim:local-first-site the demo sends no archive data to another origin", async ({ page }) => {
+test("@claim:demo-browser-storage the browser demo uses its own storage and Start for real clears it", async ({ page }) => {
+  await page.goto("/demo/");
+  await page.locator("#demo-query").fill("Northwind");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("demo:local-data-finder:query"))).toBe("Northwind");
+  await page.getByRole("button", { name: "Start for real" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.evaluate(() => localStorage.getItem("demo:local-data-finder:query"))).resolves.toBeNull();
+});
+
+test("@claim:website-privacy the demo sends no archive data or tracking requests to another origin", async ({ page }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
   await page.goto("/demo/");
@@ -53,20 +65,52 @@ test("landing names the supported local text formats", async ({ page }) => {
 
 test("demo page has no serious accessibility violations", async ({ page }) => {
   await page.goto("/demo/");
+  await expect(page.getByRole("button", { name: "Reset demo" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start for real" })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to demo" })).toBeFocused();
   const report = await new AxeBuilder({ page }).analyze();
   expect(report.violations.filter((violation) => ["serious", "critical"].includes(violation.impact || ""))).toEqual([]);
 });
 
-test("offline reload does not attempt a release API request", async ({ browser }) => {
+test("@claim:offline-reload the demo reloads offline after its first visit", async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
-  const requests: string[] = [];
-  page.on("request", (request) => requests.push(request.url()));
-  await page.goto("/");
+  await page.goto("/demo/");
+  await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.update();
+    return Boolean(registration.active);
+  });
+  await page.reload();
   await context.setOffline(true);
-  await page.evaluate(() => window.dispatchEvent(new Event("online")));
-  expect(requests.filter((url) => url.includes("api.github.com"))).toEqual([]);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Search a sample project" })).toBeVisible();
   await context.close();
+});
+
+test("demo touch targets meet the 44px minimum at 390px", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/demo/");
+  const targets = [
+    page.getByRole("link", { name: "Skip to demo" }),
+    page.locator("#demo-query"),
+    page.locator(".site-footer a[href='/']"),
+    page.locator(".site-footer a[href='/terms/']")
+  ];
+  for (const target of targets) {
+    const box = await target.boundingBox();
+    expect(box, "touch target has a box").not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test("@claim:desktop-walkthrough landing includes three captioned desktop frames", async ({ page }) => {
+  await page.goto("/");
+  const frames = page.locator(".walkthrough figure");
+  await expect(frames).toHaveCount(3);
+  await expect(frames.locator("img")).toHaveCount(3);
+  await expect(frames.locator("figcaption")).toHaveCount(3);
+  for (const frame of await frames.all()) await expect(frame.locator("img")).toBeVisible();
 });

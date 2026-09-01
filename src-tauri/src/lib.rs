@@ -160,6 +160,11 @@ fn normal_index_data(app_dir: &Path) -> IndexData {
 
 fn sample_project_dir(app_dir: &Path) -> PathBuf { app_dir.join("demo-sample") }
 
+fn discard_sample_project(app_dir: &Path) {
+    let _ = fs::remove_file(app_dir.join("demo-index.json"));
+    let _ = fs::remove_dir_all(sample_project_dir(app_dir));
+}
+
 fn write_sample_project(app_dir: &Path) -> Result<PathBuf, String> {
     let directory = sample_project_dir(app_dir);
     fs::create_dir_all(&directory).map_err(to_string)?;
@@ -189,8 +194,7 @@ fn reset_sample_project(state: State<AppState>) -> Result<Status, String> { load
 
 #[tauri::command]
 fn leave_sample_project(state: State<AppState>) -> Result<Status, String> {
-    let _ = fs::remove_file(state.app_dir.join("demo-index.json"));
-    let _ = fs::remove_dir_all(sample_project_dir(&state.app_dir));
+    discard_sample_project(&state.app_dir);
     let encrypted = state.app_dir.join("index.enc").exists();
     *state.demo.lock().map_err(to_string)? = false;
     *state.encrypted.lock().map_err(to_string)? = encrypted;
@@ -694,6 +698,71 @@ mod tests {
         for package in ["reqwest", "ureq", "hyper", "surf", "http-client", "openai", "anthropic"] {
             assert!(!manifest.contains(package), "unexpected remote-service dependency: {package}");
         }
+    }
+
+    #[test]
+    #[doc = "@claim:desktop-demo-isolation"]
+    fn claim_desktop_demo_storage_is_isolated_and_discarded() {
+        let directory = tempdir().unwrap();
+        let normal_index = directory.path().join("index.json");
+        fs::write(&normal_index, "normal-index-keeps-its-data").unwrap();
+        write_sample_project(directory.path()).unwrap();
+        let state = AppState {
+            data: Mutex::new(IndexData::default()),
+            app_dir: directory.path().to_path_buf(),
+            encrypted: Mutex::new(false),
+            locked: Mutex::new(false),
+            password: Mutex::new(None),
+            demo: Mutex::new(true),
+        };
+        state.persist().unwrap();
+        assert!(directory.path().join("demo-index.json").exists());
+        assert!(sample_project_dir(directory.path()).join("northwind-plan.md").exists());
+        assert_eq!(fs::read_to_string(&normal_index).unwrap(), "normal-index-keeps-its-data");
+        discard_sample_project(directory.path());
+        assert!(!directory.path().join("demo-index.json").exists());
+        assert!(!sample_project_dir(directory.path()).exists());
+        assert_eq!(fs::read_to_string(&normal_index).unwrap(), "normal-index-keeps-its-data");
+    }
+
+    #[test]
+    #[doc = "@claim:source-selection"]
+    fn claim_hidden_and_unsupported_files_are_skipped() {
+        let directory = tempdir().unwrap();
+        fs::write(directory.path().join("visible.txt"), "SEARCHABLE_VISIBLE").unwrap();
+        fs::write(directory.path().join(".hidden.txt"), "DO_NOT_INDEX").unwrap();
+        fs::write(directory.path().join("unsupported.csv"), "DO_NOT_INDEX").unwrap();
+        let (documents, errors) = scan_source(directory.path()).unwrap();
+        assert!(errors.is_empty());
+        assert_eq!(documents.len(), 1);
+        assert_eq!(documents[0].body, "SEARCHABLE_VISIBLE");
+    }
+
+    #[test]
+    #[doc = "@claim:source-scope-feedback"]
+    fn claim_source_status_reports_counts_times_and_parser_errors() {
+        let directory = tempdir().unwrap();
+        fs::write(directory.path().join("readable.txt"), "Searchable fact").unwrap();
+        let oversized = directory.path().join("too-large.txt");
+        fs::File::create(&oversized).unwrap().set_len(MAX_FILE_BYTES + 1).unwrap();
+        let (documents, errors) = scan_source(directory.path()).unwrap();
+        let source = SourceRecord {
+            path: directory.path().display().to_string(),
+            document_count: documents.len(),
+            last_indexed: Some(Utc::now()),
+            errors,
+        };
+        assert_eq!(source.document_count, 1);
+        assert!(source.last_indexed.is_some());
+        assert!(source.errors.iter().any(|error| error.contains("larger than 25 MB")));
+    }
+
+    #[test]
+    #[doc = "@claim:open-source-os"]
+    fn claim_open_source_delegates_to_the_operating_system() {
+        let runtime = include_str!("lib.rs");
+        assert!(runtime.contains("tauri_plugin_opener::OpenerExt"));
+        assert!(runtime.contains("app.opener().open_path(path"));
     }
 }
 

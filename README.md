@@ -1,6 +1,6 @@
 # Local Data Finder
 
-Local Data Finder is a private desktop search utility for professionals whose useful history is spread across folders and exports. It indexes only sources the user explicitly chooses, searches the extracted text locally, and attaches a local path and extraction timestamp to every result.
+Local Data Finder is a free private desktop search utility for professionals whose useful history is spread across folders and exports. It indexes only sources the user explicitly chooses, searches the extracted text locally without a network connection, and attaches a local path and extraction timestamp to every result.
 
 It supports Markdown, plain text, HTML, mbox mail exports, and text-based PDFs. It does not connect to cloud accounts, use an LLM, inspect mail attachments, or delete originals. Search results can be exported as CSV.
 
@@ -36,7 +36,7 @@ npm run build:site   # exact static deploy command -> dist/site/index.html
 
 The declared product claims are in [.factory/claims.json](.factory/claims.json). Run the exact command in each entry to check it.
 
-Desktop release binaries are intentionally built only by `.github/workflows/release.yml`. Push a `v*` tag (for example `v0.1.0`) to build unsigned `.dmg`, `.msi`/`.exe`, `.AppImage`, and `.deb` assets, plus `SHA256SUMS` and `latest.json`.
+Desktop release binaries are intentionally built only by `.github/workflows/release.yml`. Push a `v*` tag (for example `v0.1.6`) to build unsigned `.dmg`, `.msi`/`.exe`, `.AppImage`, and `.deb` assets, plus `SHA256SUMS` and `latest.json`.
 
 ## Install
 
@@ -54,7 +54,7 @@ Both installers verify SHA256 before opening or placing an artifact. v0.1 binari
 
 ## How local data is handled
 
-The normal index is an atomic JSON file in the operating system's application-data directory. The demo uses a separate `demo-index.json` and `demo-sample` directory there, and is removed on exit. Encrypted mode stores a ChaCha20-Poly1305 envelope whose key is derived with Argon2; the password is session-only. PDF extraction runs in a separate process with a 25 MB input cap and 12-second timeout. Original sources are opened read-only through the OS and are never modified.
+The normal index is an atomic JSON file in the operating system's application-data directory. The demo uses a separate `demo-index.json` and `demo-sample` directory there, and is removed on exit. Encrypted mode stores a ChaCha20-Poly1305 envelope whose key is derived with Argon2; the password is session-only. PDF extraction runs in a separate process with a 25 MB input cap and 12-second timeout. Original sources open through the OS and remain unchanged when removed from the index.
 
 See [privacy](site/privacy/index.html), [terms](site/terms/index.html), the [visual thesis](.factory/design.md), and the [handoff](.factory/handoff.md).
 

@@ -18,17 +18,17 @@
       <nav aria-label="Primary navigation"><a href="/">Home</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>
       <a class="header-download" href="/">Get the app</a>
     </header>
+    <aside class="site-demo-banner" aria-label="Demo mode"><span><strong>Demo</strong> — sample data, nothing is saved with your archive.</span><span class="demo-banner-actions"><button class="text-action" id="reset-demo" type="button">Reset demo</button><button class="text-action" id="start-for-real" type="button">Start for real</button></span></aside>
     <main id="main" class="legal">
-      <p class="eyebrow">Demo — sample data, nothing is saved</p>
+      <p class="eyebrow">Sample project</p>
       <h1>Search a sample project</h1>
       <p>Try a realistic local search. The desktop app includes this sample and keeps it separate from your own index.</p>
       <section class="evidence-demo" aria-labelledby="sample-title">
         <label class="eyebrow" for="demo-query">Sample search</label>
-        <div class="demo-search"><span aria-hidden="true">⌕</span><input id="demo-query" value="MAPLE-742" aria-describedby="demo-hint" /><kbd>Enter</kbd></div>
+        <div class="demo-search"><span aria-hidden="true">⌕</span><input id="demo-query" type="search" value="MAPLE-742" aria-describedby="demo-hint" /><kbd>Enter</kbd></div>
         <p id="demo-hint" class="unsigned-note">Try MAPLE-742, Northwind, or original export.</p>
         <div class="demo-result" id="sample-result"><span class="type">@</span><div><h2 id="sample-title">Re: Northwind approval</h2><p>…the approval for <mark>MAPLE-742</mark> is in the migration plan. Keep the original export until validation…</p><footer><span>project-mail.mbox · message 1</span><span>Sample extraction time</span></footer></div><span class="open">Source trail</span></div>
         <p class="unsigned-note" id="demo-status" aria-live="polite">One sample result found. Resetting the demo restores its original records.</p>
-        <button class="header-download" id="reset-demo" type="button">Reset demo</button>
       </section>
       <section aria-labelledby="desktop-demo-title">
         <p class="eyebrow">In the desktop app</p>
@@ -36,7 +36,7 @@
         <ol class="steps"><li><span>01</span><div><h3>Choose Load sample project</h3><p>It appears before you add your first folder.</p></div></li><li><span>02</span><div><h3>Search MAPLE-742</h3><p>Review the result text, file path, and extraction time.</p></div></li><li><span>03</span><div><h3>Start for real</h3><p>The demo records are discarded before you choose your own sources.</p></div></li></ol>
       </section>
     </main>
-    <footer class="site-footer"><p>Search selected local records with a source trail.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><small>Built by Param Factory.</small></footer>
+    <footer class="site-footer"><p>Search selected local records with a source trail.</p><nav aria-label="Legal"><a href="/">Home</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><small>Built by Param Factory.</small></footer>
     <script type="module" src="/demo.ts"></script>
   </body>
 </html>
