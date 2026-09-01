@@ -289,7 +289,8 @@ document.addEventListener("keydown", (event) => {
   const target = event.target as HTMLElement;
   if ((event.key === "/" && target.tagName !== "INPUT") || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k")) { event.preventDefault(); searchInput.focus(); }
   if (target === searchInput && results.length && ["ArrowDown", "ArrowUp"].includes(event.key)) { event.preventDefault(); selectedResult = Math.max(0, Math.min(results.length - 1, selectedResult + (event.key === "ArrowDown" ? 1 : -1))); renderResults(); document.querySelector<HTMLElement>(`[data-result="${selectedResult}"]`)?.focus(); }
-  if (event.key === "Enter" && target.matches("[data-result]")) openResult(Number(target.dataset.result));
+  // Result rows are native buttons. Their click event already covers Enter and
+  // Space; handling Enter here as well opens the same source twice.
   if (event.key === "Escape" && target === searchInput && searchInput.value) { searchInput.value = ""; runSearch(); }
   if (event.key === "Escape" && sourceRail.classList.contains("open")) { event.preventDefault(); closeSources(); }
   if (event.key === "Tab" && sourceRail.classList.contains("open")) {

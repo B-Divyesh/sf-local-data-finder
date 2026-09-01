@@ -807,6 +807,13 @@ h1 em {
     grid-template-columns: 1fr;
     padding: 40px 20px;
   }
+  .site-footer nav {
+    min-width: 0;
+    flex-wrap: wrap;
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+  .site-footer small { overflow-wrap: anywhere; }
   .price-card {
     padding: 28px;
   }

@@ -53,17 +53,17 @@
 html { background: var(--ink); color: var(--text); }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at 70% -20%, rgba(100, 255, 209, 0.07), transparent 34%), var(--ink); }
 button, input { font: inherit; }
-button { color: inherit; }
+button { min-width: 44px; min-height: 44px; color: inherit; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid var(--beam); outline-offset: 3px; }
-.skip-link { position: fixed; z-index: 50; top: 8px; left: 8px; transform: translateY(-160%); padding: 12px 16px; border-radius: 8px; background: var(--beam); color: var(--beam-ink); }
+.skip-link { position: fixed; z-index: 50; top: 8px; left: 8px; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; transform: translateY(-160%); padding: 12px 16px; border-radius: 8px; background: var(--beam); color: var(--beam-ink); }
 .skip-link:focus { transform: none; }
 
 .topbar { height: 72px; display: flex; align-items: center; gap: 24px; padding: 0 24px; border-bottom: 1px solid var(--line); background: var(--chrome); backdrop-filter: blur(18px); }
 .demo-banner { min-height: 48px; padding: 8px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: rgba(100,255,209,.12); border-bottom: 1px solid rgba(100,255,209,.35); color: var(--text); font-size: 14px; }
 .demo-banner[hidden] { display: none; }
 .demo-banner strong { color: var(--beam); }
-.text-button { min-height: 32px; border: 0; border-radius: 7px; padding: 0 8px; background: transparent; color: var(--beam); cursor: pointer; text-decoration: underline; }
+.text-button { min-height: 44px; border: 0; border-radius: 7px; padding: 0 8px; background: transparent; color: var(--beam); cursor: pointer; text-decoration: underline; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 250px; font-weight: 680; letter-spacing: -0.02em; }
 .brand svg { width: 32px; height: 32px; fill: none; stroke: var(--beam); stroke-width: 1.8; }
 .privacy-signal { display: flex; align-items: center; gap: 8px; margin-left: auto; color: var(--muted); font-size: 14px; }
@@ -86,10 +86,10 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
 .source-row strong { font-size: 15px; font-weight: 620; }
 .source-row small { margin-top: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .source-glyph { color: var(--beam); font-family: ui-monospace, monospace; padding-top: 2px; }
-.source-menu { position: absolute; right: 4px; top: 7px; border: 0; background: transparent; border-radius: 8px; width: 42px; height: 42px; color: var(--muted); cursor: pointer; font-size: 18px; opacity: .4; }
+.source-menu { position: absolute; right: 4px; top: 7px; border: 0; background: transparent; border-radius: 8px; width: 44px; height: 44px; color: var(--muted); cursor: pointer; font-size: 18px; opacity: .4; }
 .source-wrap:hover .source-menu, .source-menu:focus-visible { opacity: 1; }
 .source-error { color: var(--warning); font-size: 12px; margin: -3px 0 8px 44px; line-height: 1.45; }
-.source-error summary { cursor: pointer; min-height: 30px; }
+.source-error summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 .source-error ul { margin: 6px 0; padding-left: 17px; color: var(--muted); }
 .source-actions { display: grid; gap: 8px; padding-top: 16px; }
 .support-note { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 16px 8px 0; }

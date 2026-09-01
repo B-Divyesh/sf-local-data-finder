@@ -43,10 +43,10 @@
   },
   {
     "id": "free-download",
-    "claim": "The desktop app is free to download.",
-    "where": "Landing first-screen fact",
+    "claim": "The v0.1 desktop app is free to download; no unavailable purchase or license flow is presented.",
+    "where": "Landing first-screen fact, README, and .factory/monetization.md",
     "test": "npm run test:web -- --testNamePattern @claim:free-download",
-    "sandbox": "The product copy is checked for the free-download statement and shipped product code is checked for the absence of a checkout or payment integration."
+    "sandbox": "The scope decision and product copy are checked for the free-download statement, while shipped product code is checked for the absence of a checkout or payment integration."
   },
   {
     "id": "five-formats",

@@ -49,12 +49,19 @@ describe("published release integrity", () => {
 
 describe("published product copy", () => {
   it("@claim:free-download presents the desktop app as free without a payment gate", async () => {
-    const landing = await readFile("site/index.html", "utf8");
+    const [landing, readme, decision] = await Promise.all([
+      readFile("site/index.html", "utf8"),
+      readFile("README.md", "utf8"),
+      readFile(".factory/monetization.md", "utf8")
+    ]);
     const productFiles = await Promise.all(["site", "src-tauri", "public"].map(async (directory) => {
       const { stdout } = await run("rg", ["-l", "api/v1/products|/checkout|dodo|stripe", directory], { cwd: process.cwd() }).catch(() => ({ stdout: "" }));
       return stdout;
     }));
     expect(landing).toContain("Free to download");
+    expect(readme).toContain("free private desktop search utility");
+    expect(decision).toContain("No one-time purchase, checkout, or license restore control is exposed in v0.1.");
+    expect(decision).toContain("not an available purchase");
     expect(productFiles.join("").trim()).toBe("");
   });
 

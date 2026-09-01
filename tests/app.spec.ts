@@ -11,21 +11,36 @@ const demoStatus = {
   demo: true
 };
 
-async function installBridge(page: Page, initial = realStatus) {
-  await page.addInitScript(({ initialStatus, sampleStatus }) => {
+type BridgeSearchResult = {
+  title: string;
+  kind: "mail" | "pdf" | "html" | "markdown" | "text";
+  snippet: string;
+  path: string;
+  open_path: string;
+  extracted_at: string;
+};
+
+async function installBridge(page: Page, initial = realStatus, searchResults: BridgeSearchResult[] = []) {
+  await page.addInitScript(({ initialStatus, sampleStatus, bridgeSearchResults }) => {
     let status = structuredClone(initialStatus);
-    (window as unknown as { __TAURI_INTERNALS__: { invoke(command: string, args?: Record<string, unknown>): Promise<unknown> } }).__TAURI_INTERNALS__ = {
+    const testWindow = window as unknown as {
+      __openSourceCalls: number;
+      __TAURI_INTERNALS__: { invoke(command: string, args?: Record<string, unknown>): Promise<unknown> };
+    };
+    testWindow.__openSourceCalls = 0;
+    testWindow.__TAURI_INTERNALS__ = {
       async invoke(command, args = {}) {
         if (command === "get_status") return structuredClone(status);
         if (command === "load_sample_project" || command === "reset_sample_project") { status = structuredClone(sampleStatus); return structuredClone(status); }
         if (command === "leave_sample_project") { status = structuredClone(initialStatus); return structuredClone(status); }
         if (command === "set_encryption") { status.encrypted = Boolean(args.enabled); return null; }
-        if (command === "search_index") return [];
+        if (command === "search_index") return structuredClone(bridgeSearchResults);
+        if (command === "open_source") { testWindow.__openSourceCalls += 1; return null; }
         if (command === "refresh_all" || command === "remove_source") return null;
         throw new Error(`Unexpected test bridge command: ${command}`);
       }
     };
-  }, { initialStatus: initial, sampleStatus: demoStatus });
+  }, { initialStatus: initial, sampleStatus: demoStatus, bridgeSearchResults: searchResults });
 }
 
 test("real mode never shows the demo banner and leaving demo clears it", async ({ page }) => {
@@ -81,4 +96,55 @@ test("encryption control names the action it will take", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Disable encryption" })).toBeVisible();
   await page.getByRole("button", { name: "Disable encryption" }).click();
   await expect(page.getByRole("button", { name: "Enable encryption" })).toBeVisible();
+});
+
+test("Enter invokes open_source exactly once for a focused result", async ({ page }) => {
+  const result: BridgeSearchResult = {
+    title: "MAPLE-742 field note",
+    kind: "markdown",
+    snippet: "MAPLE-742 searchable sample",
+    path: "/sample/demo-sample/field-note.md",
+    open_path: "/sample/demo-sample/field-note.md",
+    extracted_at: "2026-09-01T00:00:00Z"
+  };
+  await installBridge(page, demoStatus, [result]);
+  await page.goto("http://127.0.0.1:1420/");
+  await page.locator("#search-input").fill("MAPLE-742");
+  const row = page.locator('[data-result="0"]');
+  await expect(row).toBeVisible();
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __openSourceCalls: number }).__openSourceCalls)).toBe(1);
+});
+
+test("390px desktop controls meet the 44px touch-target minimum", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const sourceWithError = {
+    ...demoStatus,
+    sources: [{ ...demoStatus.sources[0], errors: ["archive.pdf exceeds the 25 MB extraction limit"] }]
+  };
+  await installBridge(page, sourceWithError);
+  await page.goto("http://127.0.0.1:1420/");
+  const bannerTargets = [
+    page.getByRole("link", { name: "Skip to search" }),
+    page.getByRole("button", { name: "Reset demo" }),
+    page.getByRole("button", { name: "Start for real" })
+  ];
+  for (const target of bannerTargets) {
+    const box = await target.boundingBox();
+    expect(box, "target has a visible layout box").not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
+  await page.getByRole("button", { name: /Sources 1/ }).click();
+  const sourceTargets = [
+    page.getByRole("button", { name: /Remove demo-sample from index/ }),
+    page.locator(".source-error summary")
+  ];
+  for (const target of sourceTargets) {
+    const box = await target.boundingBox();
+    expect(box, "target has a visible layout box").not.toBeNull();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
 });

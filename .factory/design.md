@@ -46,6 +46,7 @@ UI transitions last 160–240ms and animate only opacity/transform: search focus
 
 - `assets/src/archive-landscape.png`: original generated landing illustration: abstract translucent archive plates, local file fragments, and one luminous retrieval thread. No people, brands, screens, legible text, logos, or watermark.
 - Optimized responsive derivatives ship as AVIF/WebP (desktop and mobile crop), each with dimensions and the mobile hero below 300 KB.
+- `public/assets/local-data-finder-social.jpg`: a dedicated 1200×630, 102 KB editorial crop derived from the inspected original archive illustration for Open Graph and Twitter previews; it retains the mint source trail and contains no text or third-party marks. `public/apple-touch-icon.png` is a 180×180 PNG rasterization of the hand-authored product mark for Apple touch surfaces.
 - Product mark and UI icons are hand-authored SVG strokes derived from a search beam passing through three archive layers.
 
 ### Prompt sheet

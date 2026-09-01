@@ -1,4 +1,8 @@
 import { defineConfig } from "vite";
+import { execFileSync } from "node:child_process";
+
+process.env.VITE_BUILD_ID ??= process.env.GITHUB_SHA?.slice(0, 7) || execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
+process.env.VITE_APP_VERSION ??= "0.1.8";
 
 export default defineConfig({
   root: "site",

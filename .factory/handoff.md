@@ -1,40 +1,18 @@
-# Independent verification handoff — Local Data Finder
+# Repair handoff — Local Data Finder v0.1.8
 
-## Status
+## Outcome
 
-**FAIL** for candidate `1eff0287b773810e2c80fe56a4c5f5b955bd3f3f` at `https://local-data-finder.sociobot.in`, checked 1 September 2026 UTC.
+This repair addresses the independent verifier report at `30abfc6e9d73692ad3d306ddaacba6f6eb79e115` for candidate `1eff0287b773810e2c80fe56a4c5f5b955bd3f3f`.
 
-The live static site and v0.1.7 release match the candidate product files. All 22 declared claim checks, repository gates, offline checks, serious/critical axe checks, and performance budgets pass. Acceptance is blocked by desktop keyboard and target-size findings, plus an undocumented change from the brief's one-time purchase model to a free download.
+- A focused result opened its source **twice** before the repair: the recorded Tauri bridge observed `open_source calls after one Enter: 2`. Native button activation already emits one click, so the duplicate document-level Enter path was removed. `tests/app.spec.ts` now invokes Enter on a real result button and asserts exactly one bridge call.
+- All reported desktop mobile targets are now at least 44×44 CSS pixels: Skip to search, Reset demo, Start for real, Remove source, and parser-error reasons. The new 390 px test measures both the banner controls and the opened source drawer.
+- `.factory/monetization.md` records the explicit v0.1 scope decision: the fully enabled app is free because no working Sociobot checkout is available. No unavailable purchase, price, license restore, or payment integration is exposed. The existing `@claim:free-download` test now checks this decision, the landing/README copy, and shipped code for payment integration.
+- The site has no 320 px horizontal overflow. It now ships a dedicated inspected 1200×630 social preview (`public/assets/local-data-finder-social.jpg`) and a real 180×180 Apple touch icon (`public/apple-touch-icon.png`). Every public route has canonical, Open Graph, Twitter, favicon/touch metadata, matching primary navigation, and a version/build footer.
+- Version metadata was raised consistently to `0.1.8` in npm, Cargo, Tauri, and the static build footer.
 
-## Release-blocking findings
+## Verification
 
-1. Pressing Enter once on a focused desktop search result calls `open_source` twice. The native button click and document `keydown` path both run. A mouse click calls it once.
-2. At 390×844, desktop targets measure below 44 px: Skip to search 145×43, Reset demo 99×32, Start for real 105×32, Remove source 42×42, and the parser-error summary 258×30.
-3. The researched brief specifies one-time monetization. The product states that it is free and contains no purchase or license path, with no approved scope change recorded.
-
-Minor site findings: 18 px horizontal overflow at 320 px, no dedicated 1200×630 social image, SVG rather than 180 px apple-touch icon, no footer build/version, and reduced header/social metadata consistency on secondary routes.
-
-Full evidence and check results are in `.factory/verification-5.md`. Relevant screenshots are under `.factory/qa-artifacts/`.
-
-## Passing evidence
-
-- Every exact `.factory/claims.json` command passed after `npm ci` and the documented Ubuntu Tauri prerequisites: 22/22 claims.
-- `npm run lint`, `npm run check`, `npm test`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=high` pass.
-- Test totals: 6 Vitest, 20 Rust, and 28 Playwright checks.
-- Build output exists in `dist/app` and `dist/site`; JS, CSS, image, LCP, CLS, and responsiveness budgets pass.
-- Mobile Lighthouse: performance 100, accessibility 100, best practices 100, SEO 100; LCP 950 ms, CLS 0, total blocking time 74 ms.
-- The live first screen plainly states the job, audience, and one-click sample action.
-- Live home, demo, privacy, terms, and 404 have zero serious/critical axe findings at desktop and 390 px.
-- The browser demo handles normal, empty, unmatched, markup-shaped, and long input; Reset and Start for real recover correctly.
-- The service worker updates and reloads the demo offline.
-- Recorded demo traffic is same-origin. Landing traffic adds only the documented GitHub Releases API. Security and caching headers are present.
-- All 20 generated public files match the live site byte-for-byte.
-- The v0.1.7 AppImage launches, loads the sample, searches, shows source paths/timestamps, handles no results, and removes demo artifacts on Start for real.
-- The AppImage checksum matches published `SHA256SUMS`; all macOS, Linux, and Windows release entries are present.
-
-## Reproduce
-
-Install the Linux prerequisites from the README, then run:
+Run from a clean checkout after installing the documented Ubuntu Tauri prerequisites:
 
 ```sh
 npm ci
@@ -46,15 +24,21 @@ npm run test:e2e
 npm audit --audit-level=high
 ```
 
-Run every `test` value in `.factory/claims.json` exactly as written. Serve `dist/site` for browser checks and `dist/app` with a recorded Tauri bridge for desktop viewport/keyboard checks. For final acceptance, repeat the flow in a fresh published package rather than relying only on browser mocks.
+Evidence recorded during this repair:
 
-## Next steps
+- `npm ci` completed cleanly; `npm run lint`, `npm run check`, `npm test`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=high` pass. The full suite has 6 Vitest, 20 Rust, and 36 Playwright tests.
+- Every one of the 22 exact commands in `.factory/claims.json` was rerun and passed. This includes the isolated demo, offline reload in a dedicated context, local-only source handling, parsing limits, encryption/session behavior, CSV export, OS source opening, and the retrieval benchmark.
+- The added regressions pass at desktop and 390 px: Enter triggers one source open, all reported app controls measure at least 44 px, secondary metadata/footer identity exist, and `/` plus `/404.html` have no 320 px overflow.
+- `VERIFY_NODE_MODULES=/work/repo/node_modules /opt/fleet/lib/verify-url.sh http://127.0.0.1:4180/ .factory/qa-artifacts/repair-4` passed against `dist/site`: HTTP 200, no console/page errors, title/lang/one-h1/main/alt checks passed. See `.factory/qa-artifacts/repair-4/verify.json` and screenshots.
+- Playwright Axe found zero serious or critical violations at 1440 px and 390 px for `/`, `/demo/`, `/privacy/`, `/terms/`, and `/404.html`. The standalone Axe CLI was also attempted, but its ChromeDriver 152 cannot launch the supplied Chromium 145; the pinned Playwright Axe integration is the working equivalent.
+- Mobile Lighthouse on the production build: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.1 s, CLS 0, total blocking time 60 ms. Raw report: `.factory/qa-artifacts/repair-4/lighthouse.json`.
+- The social image is 1200×630 (102 KB) and Apple touch icon 180×180 (8.6 KB), checked with ImageMagick.
 
-- Ensure Enter reaches one source-open path only and add an observable keyboard regression.
-- Set all interactive desktop targets to at least 44×44 CSS pixels and add checks for the demo banner, skip link, source removal, and parser details at 390 px.
-- Resolve the monetization mismatch with an approved scope decision or the required one-time purchase flow.
-- Complete the minor site-structure corrections, then rerun verification.
+## Release and deployment
 
-## Operator note
+Desktop packages remain GitHub Actions-only. Tag `v0.1.8` after this commit to build unsigned macOS DMGs, Windows MSI/EXE, and Linux AppImage/DEB, with `SHA256SUMS` and `latest.json`; verify one downloaded Linux asset against the published checksum. The static site deployment source is `dist/site` and targets the product-owned Static Web App `sf-local-data-finder`.
 
-macOS and Windows packages are intentionally unsigned. Signing still requires owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX`; the site and README disclose the first-launch warnings.
+## Known gaps / operator action
+
+- macOS and Windows binaries remain intentionally unsigned. Signing needs owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX`; first-launch warnings remain on the site and in the README.
+- A paid tier is deliberately unavailable in v0.1. Before a purchase is advertised, register the product through Sociobot billing and implement the paid-unlock contract described in `.factory/monetization.md`.

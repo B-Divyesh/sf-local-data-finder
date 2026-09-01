@@ -25,6 +25,27 @@ test("legal routes and keyboard path work", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Terms" })).toBeVisible();
 });
 
+test("secondary routes retain navigation, social metadata, touch icon, and build identity", async ({ page }) => {
+  for (const route of ["/demo/", "/privacy/", "/terms/", "/404.html"]) {
+    await page.goto(route);
+    await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:description"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /local-data-finder-social\.jpg$/);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("href", "/apple-touch-icon.png");
+    await expect(page.locator('.site-header nav[aria-label="Primary navigation"] a')).toHaveCount(3);
+    await expect(page.locator(".site-footer small")).toContainText(/v0\.1\.8 · build [a-f0-9]{7}/);
+  }
+});
+
+test("320px landing and 404 footer stay within the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  for (const route of ["/", "/404.html"]) {
+    await page.goto(route);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  }
+});
+
 test("@claim:demo-sandbox the demo is one click, searchable, and resettable", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: /Try it with sample data/ }).click();
