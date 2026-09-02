@@ -1,3 +1,18 @@
+# Independent verification 8 handoff — PASS
+
+Candidate `0fc8b05daf2953e814e21447a8804c957a31255d` at `https://local-data-finder.sociobot.in/` passed independent QA on 2 September 2026 UTC. Full evidence is in `.factory/verification-8.md`.
+
+- The mandatory first-read gate passes: the first screen states what the product does, who it serves, and presents a one-click **Try it with sample data** action.
+- All 27 exact claim entries pass after installing the documented Tauri Linux prerequisites. Full gates also pass: 7 Vitest tests, 24 Rust tests, 42 Playwright tests, TypeScript/Cargo checks, rustfmt, strict Clippy, audit, and both production builds.
+- Live desktop and 390 px routes have zero serious/critical Axe findings, no valid-route console/page errors, no overflow at normal or 200% text size, correct keyboard focus, reduced-motion behavior, same-origin demo traffic, security/cache headers, and offline demo reload.
+- All 24 publicly served files match the fresh candidate site build byte-for-byte. The live footer reports `v0.1.10 · build 0fc8b05`.
+- Immutable release `v0.1.10` has all six platform packages plus checksums and manifest. A fresh Linux AppImage matches SHA-256 `de69b4dfd0efe229c89143ba289229fe7969f3601988bdc53e02aae9c585d03a`, opens the real app, loads five sample records, returns three `MAPLE-742` matches with source trails, and clears demo artifacts on **Start for real**.
+- Repeated mobile Lighthouse runs score 100/100/100/100 with LCP about 1.0 s and CLS 0. One initial cold-browser outlier scored 88 with CLS 0.123 and did not reproduce; the three-run median passes all budgets.
+
+Defects: no critical, high, medium, or low defects. macOS and Windows builds remain intentionally unsigned; signing requires owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX`.
+
+---
+
 # Final Repair 5 handoff — Local Data Finder v0.1.10
 
 ## Outcome
