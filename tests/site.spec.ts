@@ -15,10 +15,19 @@ test("landing page has one clear heading and no serious accessibility violations
   expect(errors).toEqual([]);
 });
 
-test("legal routes and keyboard path work", async ({ page }) => {
+test("skip-link activation transfers focus to the main landmark", async ({ page }) => {
+  for (const route of ["/", "/demo/", "/privacy/", "/terms/", "/404.html"]) {
+    await page.goto(route);
+    await page.keyboard.press("Tab");
+    await expect(page.locator(".skip-link")).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#main")).toBeFocused();
+    await expect(page).toHaveURL(/#main$/);
+  }
+});
+
+test("legal routes work", async ({ page }) => {
   await page.goto("/");
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
   await page.goto("/privacy/");
   await expect(page.getByRole("heading", { level: 1, name: "Privacy" })).toBeVisible();
   await page.goto("/terms/");
@@ -46,7 +55,7 @@ test("secondary routes retain navigation, social metadata, touch icon, and build
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("href", "/apple-touch-icon.png");
     await expect(page.locator('.site-header nav[aria-label="Primary navigation"] a')).toHaveCount(3);
-    await expect(page.locator(".site-footer small")).toContainText(/v0\.1\.8 · build [a-f0-9]{7}/);
+    await expect(page.locator(".site-footer small")).toContainText(/v0\.1\.9 · build [a-f0-9]{7}/);
   }
 });
 

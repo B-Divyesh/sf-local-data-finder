@@ -1,5 +1,14 @@
 const routeIntentKey = "local-data-finder:route-intent";
 
+document.querySelectorAll<HTMLAnchorElement>('.skip-link[href^="#"]').forEach((link) => {
+  link.addEventListener("click", () => {
+    const target = document.querySelector<HTMLElement>(link.hash);
+    if (!target) return;
+    if (!target.hasAttribute("tabindex")) target.tabIndex = -1;
+    window.setTimeout(() => target.focus({ preventScroll: true }), 0);
+  });
+});
+
 function announceRoute(): void {
   const heading = document.querySelector<HTMLHeadingElement>("main h1");
   const announcement = document.querySelector<HTMLElement>("#route-announcement");
