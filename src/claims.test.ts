@@ -46,12 +46,16 @@ describe("published release integrity", () => {
     expect(manifest.assets.find((asset) => asset.format === "AppImage")?.sha256).toBe(createHash("sha256").update(appImageBytes).digest("hex"));
     expect(sums).toContain(createHash("sha256").update(executableBytes).digest("hex"));
 
-    const [shellInstaller, powershellInstaller] = await Promise.all([
+    const [shellInstaller, powershellInstaller, workflow] = await Promise.all([
       readFile("public/install.sh", "utf8"),
-      readFile("public/install.ps1", "utf8")
+      readFile("public/install.ps1", "utf8"),
+      readFile(".github/workflows/release.yml", "utf8")
     ]);
     expect(shellInstaller).toContain('[ "$actual" = "$expected" ]');
     expect(powershellInstaller).toContain('$actual -ne $asset.sha256.ToLowerInvariant()');
+    expect(workflow).toContain("draft: true");
+    expect(workflow).toContain("names.length !== 8");
+    expect(workflow).toContain("!published.immutable");
   });
 });
 

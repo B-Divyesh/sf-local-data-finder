@@ -55,7 +55,7 @@ test("secondary routes retain navigation, social metadata, touch icon, and build
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("href", "/apple-touch-icon.png");
     await expect(page.locator('.site-header nav[aria-label="Primary navigation"] a')).toHaveCount(3);
-    await expect(page.locator(".site-footer small")).toContainText(/v0\.1\.9 · build [a-f0-9]{7}/);
+    await expect(page.locator(".site-footer small")).toContainText(/v0\.1\.10 · build [a-f0-9]{7}/);
   }
 });
 

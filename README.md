@@ -36,7 +36,7 @@ npm run build:site   # exact static deploy command -> dist/site/index.html
 
 The declared product claims are in [.factory/claims.json](.factory/claims.json). Run the exact command in each entry to check it.
 
-Desktop release binaries are intentionally built only by `.github/workflows/release.yml`. Push a new `v*` tag (for example `v0.1.9`) to build unsigned `.dmg`, `.msi`/`.exe`, `.AppImage`, and `.deb` assets, plus `SHA256SUMS` and `latest.json`. The manifest records the source commit and uses immutable, versioned asset URLs.
+Desktop release binaries are intentionally built only by `.github/workflows/release.yml`. Push a new `v*` tag (for example `v0.1.10`) to build unsigned `.dmg`, `.msi`/`.exe`, `.AppImage`, and `.deb` assets, plus `SHA256SUMS` and `latest.json`. The workflow stages and validates every asset before publishing a GitHub-locked immutable release. The manifest records the source commit and uses versioned asset URLs.
 
 ## Install
 
