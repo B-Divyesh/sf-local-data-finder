@@ -162,10 +162,10 @@
   },
   {
     "id": "published-checksums",
-    "claim": "Published release assets include SHA256 checksums, and the installers compare them before completing.",
+    "claim": "Published release assets include SHA256 checksums, a source commit, and immutable versioned URLs; installers compare checksums before completing.",
     "where": "Landing install section and README",
     "test": "npm run test:web -- --testNamePattern @claim:published-checksums",
-    "sandbox": "Temporary release assets produce SHA256SUMS/latest.json, and both installer scripts contain the hash comparison."
+    "sandbox": "Temporary release assets produce SHA256SUMS and latest.json with a source commit and versioned URLs; both installer scripts contain the hash comparison."
   },
   {
     "id": "platform-download-selection",
