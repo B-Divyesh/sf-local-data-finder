@@ -63,6 +63,13 @@
     "sandbox": "A temporary source contains a visible text file, a dotfile, and an unsupported CSV; only the visible supported file is indexed."
   },
   {
+    "id": "selected-sources-only",
+    "claim": "Indexes only the sources you choose.",
+    "where": "Landing first-screen fact, landing how-it-works section, README, and desktop empty state",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_selected_sources_only_excludes_sibling_content",
+    "sandbox": "A temporary selected folder and a sibling folder contain different records. Scanning the selected folder must not return the sibling record."
+  },
+  {
     "id": "source-scope-feedback",
     "claim": "Each indexed source shows its record count, extraction time, and parser errors.",
     "where": "Landing privacy section and desktop source rail",
@@ -82,6 +89,13 @@
     "where": "Landing how-it-works section, desktop result action, and README",
     "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_exact_source_open_uses_record_path",
     "sandbox": "A nested record is searched and its result open path is asserted to be the record itself."
+  },
+  {
+    "id": "source-trail-per-result",
+    "claim": "Every result includes one local record path and extraction time.",
+    "where": "Landing proof strip, landing walkthrough, desktop result list, and README",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_source_trail_per_result_has_one_path_and_time",
+    "sandbox": "A Markdown record, a text record, and two mbox messages are searched together. Every result must have one non-empty path and extraction time; exported rows must preserve both fields."
   },
   {
     "id": "open-source-os",
@@ -112,6 +126,13 @@
     "sandbox": "An encrypted index envelope is checked for absence of plaintext path/text and for correct-password-only recovery."
   },
   {
+    "id": "encryption-algorithm",
+    "claim": "The encrypted-index envelope uses ChaCha20-Poly1305 with a key derived by Argon2.",
+    "where": ".factory/claims.json technical verification record",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_encryption_algorithm_uses_argon2_and_chacha20poly1305",
+    "sandbox": "A persisted fixture is checked for a 16-byte salt, 12-byte nonce, opaque ciphertext, correct recovery, and wrong-password rejection."
+  },
+  {
     "id": "session-password",
     "claim": "The encryption password stays only for the current app session.",
     "where": "Landing privacy section, desktop settings, and README",
@@ -126,6 +147,13 @@
     "sandbox": "An oversize temporary file is rejected and a timed worker returns the documented limit error."
   },
   {
+    "id": "normal-index-storage",
+    "claim": "The normal index stays in the operating system's app-data folder and replaces its JSON file safely.",
+    "where": "README and Privacy",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml claim_normal_index_storage_survives_interrupted_replace",
+    "sandbox": "A temporary app-data directory contains a prior index and an unfinished temporary write. Loading preserves the prior index; an atomic replacement then writes the new index."
+  },
+  {
     "id": "retrieval-benchmark",
     "claim": "Finds the source record for at least 80% of a 50-query archive benchmark.",
     "where": ".factory/brief.json success measure",
@@ -138,6 +166,13 @@
     "where": "Landing install section and README",
     "test": "npm run test:web -- --testNamePattern @claim:published-checksums",
     "sandbox": "Temporary release assets produce SHA256SUMS/latest.json, and both installer scripts contain the hash comparison."
+  },
+  {
+    "id": "platform-download-selection",
+    "claim": "The landing page chooses the matching macOS, Windows, or Linux release asset.",
+    "where": "README Install section and landing download button",
+    "test": "npm run test:web -- --testNamePattern @claim:platform-download-selection",
+    "sandbox": "A fixture release manifest is matched against macOS Intel, Apple-silicon, Windows, and Linux browser signals. Each selection must use the corresponding release asset."
   },
   {
     "id": "unsigned-builds",

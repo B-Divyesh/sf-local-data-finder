@@ -1,3 +1,5 @@
+import "./route";
+
 const input = document.querySelector<HTMLInputElement>("#demo-query")!;
 const result = document.querySelector<HTMLElement>("#sample-result")!;
 const statusMessage = document.querySelector<HTMLElement>("#demo-status")!;

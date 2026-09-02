@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { filterLabel, highlightSnippet, sortResults } from "./search";
-import { detectPlatform } from "../site/platform";
+import { detectPlatform, selectReleaseAsset } from "../site/platform";
 
 describe("search presentation", () => {
   it("highlights literal query terms without interpreting HTML", () => {
@@ -16,8 +16,25 @@ describe("search presentation", () => {
     expect(filterLabel({ kind: "mail", source: "/mail" })).toBe("mail · one source");
   });
 
-  it("offers the native Apple silicon build when browsers report MacIntel", () => {
-    expect(detectPlatform("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel").arch).toBe("arm64");
+  it("uses architecture information to distinguish macOS builds", () => {
+    expect(detectPlatform("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel").arch).toBe("x86_64");
     expect(detectPlatform("Mozilla/5.0 (Macintosh)", "MacIntel", "arm").arch).toBe("arm64");
+  });
+
+  it("@claim:platform-download-selection selects a matching release asset for each supported platform", () => {
+    const assets = [
+      { name: "local-data-finder_0.1.9_x64.dmg", browser_download_url: "https://example.test/mac-intel" },
+      { name: "local-data-finder_0.1.9_arm64.dmg", browser_download_url: "https://example.test/mac-arm" },
+      { name: "local-data-finder_0.1.9_x64-setup.exe", browser_download_url: "https://example.test/windows" },
+      { name: "local-data-finder_0.1.9_amd64.AppImage", browser_download_url: "https://example.test/linux" }
+    ];
+    const macIntel = detectPlatform("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel", "x86");
+    const macArm = detectPlatform("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel", "arm");
+    const windows = detectPlatform("Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Win32");
+    const linux = detectPlatform("Mozilla/5.0 (X11; Linux x86_64)", "Linux x86_64");
+    expect(selectReleaseAsset(macIntel, assets)?.browser_download_url).toBe("https://example.test/mac-intel");
+    expect(selectReleaseAsset(macArm, assets)?.browser_download_url).toBe("https://example.test/mac-arm");
+    expect(selectReleaseAsset(windows, assets)?.browser_download_url).toBe("https://example.test/windows");
+    expect(selectReleaseAsset(linux, assets)?.browser_download_url).toBe("https://example.test/linux");
   });
 });

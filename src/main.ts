@@ -31,7 +31,7 @@ app.innerHTML = `
     </aside>
     <main id="main" tabindex="-1">
       <div class="workspace-heading">
-        <div><p class="eyebrow">Private archive retrieval</p><h1>Find the record, not a guess.</h1></div>
+        <div><p class="eyebrow">Search selected records</p><h1>Search selected local records</h1></div>
         <button class="button ghost mobile-sources" id="show-sources" aria-controls="source-rail" aria-expanded="false">Sources <span id="mobile-source-count">0</span></button>
       </div>
       <section class="search-area" aria-labelledby="search-label">

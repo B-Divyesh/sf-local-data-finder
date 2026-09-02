@@ -558,6 +558,24 @@ mod tests {
     }
 
     #[test]
+    #[doc = "@claim:source-trail-per-result"]
+    fn claim_source_trail_per_result_has_one_path_and_time() {
+        let now = Utc::now();
+        let records = vec![
+            Document { id: "markdown".into(), title: "Markdown record".into(), path: "/archive/plan.md".into(), source_path: "/archive".into(), kind: "markdown".into(), body: "TRAIL-PROOF".into(), extracted_at: now, modified_at: None },
+            Document { id: "text".into(), title: "Text record".into(), path: "/archive/notes.txt".into(), source_path: "/archive".into(), kind: "text".into(), body: "TRAIL-PROOF".into(), extracted_at: now, modified_at: None },
+            Document { id: "mail-1".into(), title: "First mail".into(), path: "/archive/mail.mbox · message 1".into(), source_path: "/archive".into(), kind: "mail".into(), body: "TRAIL-PROOF".into(), extracted_at: now, modified_at: None },
+            Document { id: "mail-2".into(), title: "Second mail".into(), path: "/archive/mail.mbox · message 2".into(), source_path: "/archive".into(), kind: "mail".into(), body: "TRAIL-PROOF".into(), extracted_at: now, modified_at: None },
+        ];
+        let results = search_documents("TRAIL-PROOF", None, None, &IndexData { documents: records, ..Default::default() });
+        assert_eq!(results.len(), 4);
+        assert!(results.iter().all(|result| !result.path.is_empty() && result.path.matches("/archive/").count() == 1 && result.extracted_at == now));
+        let csv = results_as_csv(&results);
+        assert_eq!(csv.lines().count(), 5);
+        assert!(csv.lines().skip(1).all(|row| row.matches("/archive/").count() == 1 && row.contains(&now.to_rfc3339())));
+    }
+
+    #[test]
     #[doc = "@claim:five-formats"]
     fn claim_five_formats_are_ingested_and_searchable() {
         let directory = tempdir().unwrap();
@@ -645,6 +663,18 @@ mod tests {
     }
 
     #[test]
+    #[doc = "@claim:encryption-algorithm"]
+    fn claim_encryption_algorithm_uses_argon2_and_chacha20poly1305() {
+        let plain = b"index record";
+        let envelope = encrypt_bytes(plain, "correct horse battery").unwrap();
+        assert_eq!(B64.decode(&envelope.salt).unwrap().len(), 16, "Argon2 needs a generated salt");
+        assert_eq!(B64.decode(&envelope.nonce).unwrap().len(), 12, "ChaCha20-Poly1305 needs a 96-bit nonce");
+        assert!(!B64.decode(&envelope.ciphertext).unwrap().is_empty());
+        assert_eq!(decrypt_bytes(&envelope, "correct horse battery").unwrap(), plain);
+        assert!(decrypt_bytes(&envelope, "wrong password").is_err());
+    }
+
+    #[test]
     #[doc = "@claim:parser-limits"]
     fn claim_parser_limits_reject_oversize_and_timeout_workers() {
         let directory = tempdir().unwrap();
@@ -726,6 +756,23 @@ mod tests {
     }
 
     #[test]
+    #[doc = "@claim:normal-index-storage"]
+    fn claim_normal_index_storage_survives_interrupted_replace() {
+        let directory = tempdir().unwrap();
+        let prior = IndexData { documents: vec![Document { id: "prior".into(), title: "Prior record".into(), path: "/archive/prior.txt".into(), source_path: "/archive".into(), kind: "text".into(), body: "prior".into(), extracted_at: Utc::now(), modified_at: None }], ..Default::default() };
+        let prior_bytes = serde_json::to_vec(&prior).unwrap();
+        let index_path = directory.path().join("index.json");
+        fs::write(&index_path, &prior_bytes).unwrap();
+        fs::write(index_path.with_extension("tmp"), b"unfinished replacement").unwrap();
+        let loaded = AppState::load(directory.path().to_path_buf());
+        assert_eq!(loaded.data.lock().unwrap().documents[0].id, "prior");
+        let replacement = br#"{"sources":[],"documents":[],"last_indexed":null}"#;
+        atomic_write(&index_path, replacement).unwrap();
+        assert_eq!(fs::read(&index_path).unwrap(), replacement);
+        assert!(!index_path.with_extension("tmp").exists());
+    }
+
+    #[test]
     #[doc = "@claim:source-selection"]
     fn claim_hidden_and_unsupported_files_are_skipped() {
         let directory = tempdir().unwrap();
@@ -736,6 +783,23 @@ mod tests {
         assert!(errors.is_empty());
         assert_eq!(documents.len(), 1);
         assert_eq!(documents[0].body, "SEARCHABLE_VISIBLE");
+    }
+
+    #[test]
+    #[doc = "@claim:selected-sources-only"]
+    fn claim_selected_sources_only_excludes_sibling_content() {
+        let root = tempdir().unwrap();
+        let selected = root.path().join("selected");
+        let sibling = root.path().join("not-selected");
+        fs::create_dir_all(&selected).unwrap();
+        fs::create_dir_all(&sibling).unwrap();
+        fs::write(selected.join("chosen.txt"), "CHOSEN_SOURCE_FACT").unwrap();
+        fs::write(sibling.join("private.txt"), "UNSELECTED_SIBLING_FACT").unwrap();
+        let (documents, errors) = scan_source(&selected).unwrap();
+        assert!(errors.is_empty());
+        assert_eq!(documents.len(), 1);
+        assert!(documents[0].body.contains("CHOSEN_SOURCE_FACT"));
+        assert!(documents.iter().all(|document| !document.body.contains("UNSELECTED_SIBLING_FACT") && document.source_path == selected.to_string_lossy()));
     }
 
     #[test]

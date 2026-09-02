@@ -13,7 +13,7 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | Get the desktop app | 4 | Pass |
 | Works offline after download | 4 | Pass |
 | Free to download | 3 | Pass |
-| Choose each source | 3 | Pass |
+| Choose sources yourself | 4 | Pass |
 | Search selected folders and exports, then check every result against its original record. | 13 | Pass |
 | 5 text formats | 3 | Pass |
 | CSV result export | 3 | Pass |
@@ -25,8 +25,8 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | Choose the boundaries | 3 | Pass |
 | Add only specific folders or explicit exports. | 7 | Pass |
 | Hidden folders and unsupported files are skipped. | 7 | Pass |
-| Build a local evidence map | 5 | Pass |
-| Text is extracted on-device from Markdown, plain text, HTML, mbox and text-based PDFs. | 14 | Pass |
+| Extract text from selected sources | 5 | Pass |
+| Text is extracted on your computer from Markdown, plain text, HTML, mbox and text-based PDFs. | 16 | Pass |
 | Mail attachments stay closed. | 4 | Pass |
 | Search, inspect, open | 3 | Pass |
 | Filter local text matches, read the surrounding evidence, then open the original local source. | 13 | Pass |
@@ -43,18 +43,19 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | Keep archive search on your computer. | 6 | Pass |
 | Local processing | 2 | Pass |
 | Indexing and search run in the desktop app. | 8 | Pass |
-| The app has no analytics SDK, user account, or corpus API. | 11 | Pass |
+| No tracking, account, or service receives your archive. | 9 | Pass |
 | Visible source scope | 3 | Pass |
 | See each indexed source, its record count, extraction time, and parser errors. | 12 | Pass |
 | Removing a source does not delete the original. | 8 | Pass |
 | Password encryption | 2 | Pass |
 | Encrypt extracted text and paths at rest. | 7 | Pass |
 | The password stays only for the current app session. | 9 | Pass |
-| Prefer a terminal? | 3 | Pass |
+| Install from a terminal | 4 | Pass |
 | Install in one verified step. | 5 | Pass |
 | macOS / Linux | 2 | Pass |
 | Windows PowerShell | 2 | Pass |
-| Copy | 1 | Pass |
+| Copy macOS/Linux command | 3 | Pass |
+| Copy Windows command | 3 | Pass |
 | v0.1 builds are unsigned. | 5 | Pass |
 | macOS may require right-click → Open; Windows may show a SmartScreen notice. | 12 | Pass |
 | Checksums are published with every release. | 6 | Pass |

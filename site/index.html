@@ -25,6 +25,7 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <p class="sr-only" id="route-announcement" aria-live="polite" aria-atomic="true"></p>
     <header class="site-header">
       <a class="brand" href="/" aria-label="Local Data Finder home"><svg aria-hidden="true" viewBox="0 0 40 40"><path d="M7 9h21M7 20h15M7 31h21"/><circle cx="28" cy="20" r="6"/><path d="m32.5 24.5 5 5"/></svg><span>Local Data Finder</span></a>
       <nav aria-label="Primary navigation"><a href="/demo/">Demo</a><a href="#how">How it works</a><a href="#privacy">Privacy</a></nav>
@@ -38,14 +39,14 @@
         </picture>
         <div class="hero-copy">
           <p class="eyebrow"><span></span> Local search for selected records</p>
-          <h1>Find facts in your<br /><em>local archive.</em></h1>
+          <h1 tabindex="-1">Find facts in your<br /><em>local archive.</em></h1>
           <p class="lede">For professionals with years of notes and exports, find the original record without uploading it.</p>
           <div class="download-block" id="download">
-            <a class="download-button" id="try-demo" href="/demo/"><span><small>Try it with sample data</small><strong>Open the sample project</strong></span><span aria-hidden="true">→</span></a>
+            <a class="download-button" id="try-demo" href="/demo/?demo=1"><span><small>Try it with sample data</small><strong>Open the sample project</strong></span><span aria-hidden="true">→</span></a>
             <p id="download-note">The sample is isolated and can be reset.</p>
             <a class="header-download" id="primary-download" href="https://github.com/B-Divyesh/sf-local-data-finder/releases/latest">Get the desktop app</a>
           </div>
-          <div class="trust-line"><span>Works offline after download</span><span>Free to download</span><span>Choose each source</span></div>
+          <div class="trust-line"><span>Works offline after download</span><span>Free to download</span><span>Choose sources yourself</span></div>
         </div>
       </section>
 
@@ -58,7 +59,7 @@
         <div class="section-intro"><p class="eyebrow">How it works</p><h2>Search records you choose.</h2><p>Local Data Finder builds an index from the folders and exports you select. Each match includes its path and extraction time.</p></div>
         <ol class="steps">
           <li><span>01</span><div><h3>Choose the boundaries</h3><p>Add only specific folders or explicit exports. Hidden folders and unsupported files are skipped.</p></div></li>
-          <li><span>02</span><div><h3>Build a local evidence map</h3><p>Text is extracted on-device from Markdown, plain text, HTML, mbox and text-based PDFs. Mail attachments stay closed.</p></div></li>
+          <li><span>02</span><div><h3>Extract text from selected sources</h3><p>Text is extracted on your computer from Markdown, plain text, HTML, mbox and text-based PDFs. Mail attachments stay closed.</p></div></li>
           <li><span>03</span><div><h3>Search, inspect, open</h3><p>Filter local text matches, read the surrounding evidence, then open the original local source.</p></div></li>
         </ol>
       </section>
@@ -79,10 +80,10 @@
 
       <section class="privacy-section" id="privacy">
         <div><p class="eyebrow">Privacy boundary</p><h2>Keep archive search on your computer.</h2></div>
-        <div class="privacy-grid"><article><span aria-hidden="true">⌂</span><h3>Local processing</h3><p>Indexing and search run in the desktop app. The app has no analytics SDK, user account, or corpus API.</p></article><article><span aria-hidden="true">◇</span><h3>Visible source scope</h3><p>See each indexed source, its record count, extraction time, and parser errors. Removing a source does not delete the original.</p></article><article><span aria-hidden="true">◫</span><h3>Password encryption</h3><p>Encrypt extracted text and paths at rest. The password stays only for the current app session.</p></article></div>
+        <div class="privacy-grid"><article><span aria-hidden="true">⌂</span><h3>Local processing</h3><p>Indexing and search run in the desktop app. No tracking, account, or service receives your archive.</p></article><article><span aria-hidden="true">◇</span><h3>Visible source scope</h3><p>See each indexed source, its record count, extraction time, and parser errors. Removing a source does not delete the original.</p></article><article><span aria-hidden="true">◫</span><h3>Password encryption</h3><p>Encrypt extracted text and paths at rest. The password stays only for the current app session.</p></article></div>
       </section>
 
-      <section class="install-section" aria-labelledby="install-title"><p class="eyebrow">Prefer a terminal?</p><h2 id="install-title">Install in one verified step.</h2><div class="commands"><button class="command" data-copy="curl -fsSL https://local-data-finder.sociobot.in/install.sh | sh"><span>macOS / Linux</span><code>curl -fsSL https://local-data-finder.sociobot.in/install.sh | sh</code><b>Copy</b></button><button class="command" data-copy="irm https://local-data-finder.sociobot.in/install.ps1 | iex"><span>Windows PowerShell</span><code>irm https://local-data-finder.sociobot.in/install.ps1 | iex</code><b>Copy</b></button></div><p class="unsigned-note">v0.1 builds are unsigned. macOS may require right-click → Open; Windows may show a SmartScreen notice. Checksums are published with every release.</p></section>
+      <section class="install-section" aria-labelledby="install-title"><p class="eyebrow">Install from a terminal</p><h2 id="install-title">Install in one verified step.</h2><div class="commands"><button class="command" aria-label="Copy macOS or Linux install command" data-copy-label="Copy macOS/Linux command" data-copy="curl -fsSL https://local-data-finder.sociobot.in/install.sh | sh"><span>macOS / Linux</span><code>curl -fsSL https://local-data-finder.sociobot.in/install.sh | sh</code><b>Copy macOS/Linux command</b></button><button class="command" aria-label="Copy Windows install command" data-copy-label="Copy Windows command" data-copy="irm https://local-data-finder.sociobot.in/install.ps1 | iex"><span>Windows PowerShell</span><code>irm https://local-data-finder.sociobot.in/install.ps1 | iex</code><b>Copy Windows command</b></button></div><p class="unsigned-note">v0.1 builds are unsigned. macOS may require right-click → Open; Windows may show a SmartScreen notice. Checksums are published with every release.</p></section>
     </main>
     <footer class="site-footer"><div class="brand"><svg aria-hidden="true" viewBox="0 0 40 40"><path d="M7 9h21M7 20h15M7 31h21"/><circle cx="28" cy="20" r="6"/><path d="m32.5 24.5 5 5"/></svg><span>Local Data Finder</span></div><p>Search selected local records with a source trail.</p><nav aria-label="Legal"><a href="/demo/">Demo</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-local-data-finder">Source</a></nav><small>Built by Param Factory · v%VITE_APP_VERSION% · build %VITE_BUILD_ID% · Hero imagery generated for this product with Azure AI Foundry.</small></footer>
     <script type="module" src="/site.ts"></script>

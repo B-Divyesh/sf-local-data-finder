@@ -25,6 +25,18 @@ test("legal routes and keyboard path work", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Terms" })).toBeVisible();
 });
 
+test("route navigation focuses and announces the new page heading, including Back", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".site-footer").getByRole("link", { name: "Demo" }).click();
+  await expect(page).toHaveURL(/\/demo\//);
+  await expect(page.getByRole("heading", { level: 1, name: "Search a sample project" })).toBeFocused();
+  await expect(page.locator("#route-announcement")).toHaveText("Demo — Local Data Finder");
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { level: 1, name: /Find facts in your local archive/ })).toBeFocused();
+  await expect(page.locator("#route-announcement")).toHaveText("Local Data Finder — Find local archive records");
+});
+
 test("secondary routes retain navigation, social metadata, touch icon, and build identity", async ({ page }) => {
   for (const route of ["/demo/", "/privacy/", "/terms/", "/404.html"]) {
     await page.goto(route);
@@ -49,7 +61,7 @@ test("320px landing and 404 footer stay within the viewport", async ({ page }) =
 test("@claim:demo-sandbox the demo is one click, searchable, and resettable", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: /Try it with sample data/ }).click();
-  await expect(page).toHaveURL(/\/demo\//);
+  await expect(page).toHaveURL(/\/demo\/\?demo=1/);
   await expect(page.getByText("Demo — sample data, nothing is saved")).toBeVisible();
   const query = page.locator("#demo-query");
   await query.fill("not in the sample");
@@ -60,6 +72,14 @@ test("@claim:demo-sandbox the demo is one click, searchable, and resettable", as
   await expect(query).toHaveValue("MAPLE-742");
   await expect(page.locator("#sample-result")).toBeVisible();
   await expect(page.getByText(/Demo reset. One sample result found/)).toBeVisible();
+});
+
+test("@claim:demo-sandbox ?demo=1 opens the isolated sample directly", async ({ page }) => {
+  await page.goto("/?demo=1");
+  await expect(page).toHaveURL(/\/demo\/\?demo=1/);
+  await expect(page.getByText("Demo — sample data, nothing is saved")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reset demo" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start for real" })).toBeVisible();
 });
 
 test("@claim:demo-browser-storage the browser demo uses its own storage and Start for real clears it", async ({ page }) => {

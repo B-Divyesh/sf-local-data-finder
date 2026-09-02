@@ -24,6 +24,7 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to demo</a>
+    <p class="sr-only" id="route-announcement" aria-live="polite" aria-atomic="true"></p>
     <header class="site-header">
       <a class="brand" href="/" aria-label="Local Data Finder home"><svg aria-hidden="true" viewBox="0 0 40 40"><path d="M7 9h21M7 20h15M7 31h21"/><circle cx="28" cy="20" r="6"/><path d="m32.5 24.5 5 5"/></svg><span>Local Data Finder</span></a>
       <nav aria-label="Primary navigation"><a href="/demo/">Demo</a><a href="/#how">How it works</a><a href="/#privacy">Privacy</a></nav>
@@ -32,7 +33,7 @@
     <aside class="site-demo-banner" aria-label="Demo mode"><span><strong>Demo</strong> — sample data, nothing is saved with your archive.</span><span class="demo-banner-actions"><button class="text-action" id="reset-demo" type="button">Reset demo</button><button class="text-action" id="start-for-real" type="button">Start for real</button></span></aside>
     <main id="main" class="legal">
       <p class="eyebrow">Sample project</p>
-      <h1>Search a sample project</h1>
+      <h1 tabindex="-1">Search a sample project</h1>
       <p>Try a realistic local search. The desktop app includes this sample and keeps it separate from your own index.</p>
       <section class="evidence-demo" aria-labelledby="sample-title">
         <label class="eyebrow" for="demo-query">Sample search</label>
