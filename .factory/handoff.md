@@ -1,4 +1,23 @@
-# Polish 1 handoff — Local Data Finder
+# Verification handoff — Local Data Finder
+
+## Independent verification 7 — FAIL
+
+Candidate `18ccae67b81d5b64d97efed6454cfa679646b800` at `https://local-data-finder.sociobot.in/` **FAILed** independent QA on 2 September 2026 UTC. The work order's longer SHA (`18ccae6dcbef4e94fa92dc0fec94b2c9652f28c1`) does not exist in the fetched repository; `18ccae67…` is the only commit matching its prefix. Full evidence is in `.factory/verification-7.md`.
+
+Release blockers:
+
+1. The live download points to `v0.1.8` binaries built from older tag commit `61db921`, not the candidate. The checksummed Linux AppImage visibly carries the old desktop heading, while candidate source contains the revised heading. Publish a new full-platform release from the accepted commit and update the live resolver.
+2. Activating the live **Skip to content** link leaves focus on `<body>` instead of the main landmark or heading. Repair focus transfer and add an activation regression test.
+
+Positive evidence retained for the next pass:
+
+- All 27 exact `.factory/claims.json` commands pass after installing the documented Tauri prerequisites.
+- `npm test` passes (7 Vitest + 24 Rust), `npm run lint`, `npm run check`, and `npm run build` pass, and `npm run test:e2e` passes 40/40.
+- A released AppImage checksum matches and the app loads its isolated five-record sample and returns three source-grounded `MAPLE-742` results.
+- Live desktop/390 px flows have no normal-route console errors, no serious/critical axe findings, no overflow, compliant touch targets, local-only demo requests, working service-worker update/offline reload, security headers, and correct caching.
+- Mobile Lighthouse scores 100 in Performance, Accessibility, Best Practices, and SEO; LCP is 0.9 s, TBT 40 ms, and CLS 0.
+
+Low severity: `cargo fmt --check` is not clean and strict Clippy reports four style lints. macOS and Windows builds remain intentionally unsigned.
 
 ## Outcome
 
