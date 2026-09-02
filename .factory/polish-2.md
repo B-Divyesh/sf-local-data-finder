@@ -29,8 +29,8 @@
 
 ## Verification
 
-- Fresh clone `/tmp/local-data-finder-polish2-mqdKZR/repo` at `8f520fd`: `npm ci` succeeded and all 27 exact claim commands in `.factory/claims.json` passed. The runner reached its following `npm run check`; its redundant full Tauri compilation was stopped only after the disposable filesystem filled. The standalone compact local suite below completed successfully.
-- `npm run lint`, `npm run check`, `npm test` (7 Vitest, 24 Rust), `npm run build`, `npm run test:e2e` (44/44 desktop/mobile), `cargo fmt --check`, strict `cargo clippy --all-targets -- -D warnings`, and `npm audit --audit-level=high` all pass.
+- Fresh clone `/tmp/local-data-finder-polish2-mqdKZR/repo` at `8f520fd`: `npm ci` succeeded and all 27 exact claim commands in `.factory/claims.json` passed. Its complete suite then passed using the same compact shared Cargo target: `npm run check`, `npm test` (7 Vitest, 24 Rust), `npm run build`, `npm run test:e2e` (44/44 desktop/mobile), and `npm audit --audit-level=high`.
+- The repair worktree also passed `npm run lint`, `cargo fmt --check`, and strict `cargo clippy --all-targets -- -D warnings`.
 - Playwright’s Axe integration covers the landing and demo at both viewports with zero serious/critical violations. It also covers demo storage isolation, same-origin privacy requests, service-worker offline reload in a fresh context, keyboard focus, and 44 px touch targets.
 - `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4180/ .factory/qa-artifacts/polish-2-local` passed in 652 ms: correct title/language/one h1/main/alt/button checks and no console/page errors.
 
