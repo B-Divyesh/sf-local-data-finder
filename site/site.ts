@@ -1,25 +1,24 @@
 import { currentPlatform, selectReleaseAsset } from "./platform";
+import { fetchAndCacheRelease, readCachedRelease } from "./release-cache";
 import "./route";
-
-type GithubRelease = { tag_name: string; assets: Array<{ name: string; browser_download_url: string }> };
 
 async function resolveDownload(): Promise<void> {
   const detected = await currentPlatform();
   const button = document.querySelector<HTMLAnchorElement>("#primary-download")!;
   const note = document.querySelector("#download-note")!;
   if (!detected.os) return;
-  if (!navigator.onLine) {
+  const cached = readCachedRelease(localStorage);
+  if (!cached && !navigator.onLine) {
     note.textContent = "Offline — open this page online to check current downloads.";
     return;
   }
-  if (!location.hostname.endsWith(".sociobot.in")) {
+  const isLocalDevelopment = ["127.0.0.1", "localhost"].includes(location.hostname);
+  if (!location.hostname.endsWith(".sociobot.in") && !isLocalDevelopment) {
     note.textContent = "Release downloads · macOS, Windows and Linux";
     return;
   }
   try {
-    const response = await fetch("https://api.github.com/repos/B-Divyesh/sf-local-data-finder/releases/latest", { cache: "no-store" });
-    if (!response.ok) throw new Error("No release manifest");
-    const release = await response.json() as GithubRelease;
+    const release = cached || await fetchAndCacheRelease(fetch, localStorage);
     const asset = selectReleaseAsset(detected, release.assets);
     if (asset) { button.href = asset.browser_download_url; note.textContent = `Version ${release.tag_name.replace(/^v/, "")} · SHA256 published in latest.json`; }
   } catch { note.textContent = "Release downloads · macOS, Windows and Linux"; }

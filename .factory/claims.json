@@ -187,5 +187,19 @@
     "where": "Landing desktop walkthrough",
     "test": "npm run test:e2e -- --grep @claim:desktop-walkthrough",
     "sandbox": "A fresh browser context opens the landing page and asserts three visible images with three captions."
+  },
+  {
+    "id": "release-metadata-cache",
+    "claim": "Successful GitHub release metadata is cached in this browser for one hour.",
+    "where": "Landing download resolver and Privacy",
+    "test": "npm run test:web -- --testNamePattern @claim:release-metadata-cache",
+    "sandbox": "Two immediate resolver loads share a fake browser storage area and one fixture response; the one-hour boundary must fetch again."
+  },
+  {
+    "id": "generated-image-disclosure",
+    "claim": "The landing artwork was generated for this product.",
+    "where": "Every public footer",
+    "test": "npm run test:e2e -- --grep @claim:generated-image-disclosure",
+    "sandbox": "Each public route footer is checked for the plain generated-artwork disclosure."
   }
 ]

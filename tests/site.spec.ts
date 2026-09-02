@@ -1,6 +1,29 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+const releaseApiUrl = "https://api.github.com/repos/B-Divyesh/sf-local-data-finder/releases/latest";
+const releaseFixture = {
+  tag_name: "v0.1.10",
+  assets: [
+    {
+      name: "Local.Data.Finder_0.1.10_amd64.AppImage",
+      browser_download_url: "https://github.com/B-Divyesh/sf-local-data-finder/releases/download/v0.1.10/Local.Data.Finder_0.1.10_amd64.AppImage"
+    },
+    {
+      name: "Local.Data.Finder_0.1.10_x64.dmg",
+      browser_download_url: "https://github.com/B-Divyesh/sf-local-data-finder/releases/download/v0.1.10/Local.Data.Finder_0.1.10_x64.dmg"
+    },
+    {
+      name: "Local.Data.Finder_0.1.10_x64-setup.exe",
+      browser_download_url: "https://github.com/B-Divyesh/sf-local-data-finder/releases/download/v0.1.10/Local.Data.Finder_0.1.10_x64-setup.exe"
+    }
+  ]
+};
+
+test.beforeEach(async ({ page }) => {
+  await page.route(releaseApiUrl, async (route) => route.fulfill({ json: releaseFixture }));
+});
+
 test("landing page has one clear heading and no serious accessibility violations", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
@@ -59,11 +82,12 @@ test("secondary routes retain navigation, social metadata, touch icon, and build
   }
 });
 
-test("public footers identify the external source link and the install section explains checksum verification", async ({ page }) => {
+test("@claim:generated-image-disclosure public footers disclose the generated landing artwork and identify the external source", async ({ page }) => {
   for (const route of ["/", "/demo/", "/privacy/", "/terms/", "/404.html"]) {
     await page.goto(route);
     const source = page.locator('.site-footer a[href="https://github.com/B-Divyesh/sf-local-data-finder"]');
     await expect(source).toHaveAccessibleName("Source on GitHub (external)");
+    await expect(page.locator(".site-footer")).toContainText("The landing artwork was generated for this product.");
   }
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 2, name: "Install with a verified command" })).toBeVisible();
@@ -95,7 +119,7 @@ test("@claim:demo-sandbox the demo is one click, searchable, and resettable", as
   await expect(page.getByText(/Demo reset. One sample result found/)).toBeVisible();
 });
 
-test("@claim:demo-sandbox ?demo=1 opens the isolated sample directly", async ({ page }) => {
+test("?demo=1 opens the isolated sample directly", async ({ page }) => {
   await page.goto("/?demo=1");
   await expect(page).toHaveURL(/\/demo\/\?demo=1/);
   await expect(page.getByText("Demo — sample data, nothing is saved")).toBeVisible();
@@ -118,6 +142,22 @@ test("@claim:website-privacy the demo sends no archive data or tracking requests
   await page.goto("/demo/");
   await page.locator("#demo-query").fill("Northwind");
   expect(requests.every((url) => new URL(url).origin === "http://127.0.0.1:4173")).toBe(true);
+});
+
+test("release metadata is stored for one hour and an immediate reload makes no second API request", async ({ page }) => {
+  let requests = 0;
+  await page.unroute(releaseApiUrl);
+  await page.route(releaseApiUrl, async (route) => {
+    requests += 1;
+    await route.fulfill({ json: releaseFixture });
+  });
+
+  await page.goto("/");
+  await expect(page.locator("#download-note")).toContainText("Version 0.1.10");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("local-data-finder:github-release:v1"))).not.toBeNull();
+  await page.reload();
+  await expect(page.locator("#download-note")).toContainText("Version 0.1.10");
+  expect(requests).toBe(1);
 });
 
 test("landing names the supported local text formats", async ({ page }) => {
@@ -163,8 +203,8 @@ test("demo touch targets meet the 44px minimum at 390px", async ({ page }) => {
   for (const target of targets) {
     const box = await target.boundingBox();
     expect(box, "touch target has a box").not.toBeNull();
-    expect(box!.width).toBeGreaterThanOrEqual(44);
-    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(45);
+    expect(box!.height).toBeGreaterThanOrEqual(45);
   }
 });
 

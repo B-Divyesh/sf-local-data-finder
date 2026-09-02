@@ -58,8 +58,8 @@ button {
   left: 8px;
   transform: translateY(-150%);
   padding: 12px 16px;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 46px;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
   background: var(--beam);
@@ -92,7 +92,7 @@ button {
   gap: 40px;
 }
 .brand {
-  min-height: 44px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -114,8 +114,8 @@ button {
 }
 .site-header nav a,
 .site-footer a {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 46px;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -129,7 +129,7 @@ button {
   color: var(--text);
 }
 .header-download {
-  min-height: 44px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   padding: 0 18px;
@@ -159,8 +159,8 @@ button {
 .site-demo-banner strong { color: var(--beam); }
 .demo-banner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .text-action {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 46px;
+  min-height: 46px;
   padding: 0 10px;
   border: 0;
   border-radius: 8px;
@@ -427,7 +427,7 @@ h1 em {
 }
 .demo-search input {
   min-width: 0;
-  min-height: 44px;
+  min-height: 46px;
   flex: 1;
   border: 0;
   background: transparent;

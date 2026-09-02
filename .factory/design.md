@@ -55,4 +55,6 @@ UI transitions last 160–240ms and animate only opacity/transform: search focus
 
 Generation: Azure AI Foundry factory image model via `/opt/fleet/lib/gen-image.sh`, 2026-08-28. Generated imagery is original to this product. Final candidate is visually inspected for stray text, marks, misleading UI, and composition before use.
 
+Visitor disclosure: every public footer says, “The landing artwork was generated for this product.”
+
 The three landing-page walkthrough frames (`public/assets/walkthrough-01-start.png`, `walkthrough-02-sample.png`, and `walkthrough-03-result.png`) are original screenshots captured from the local desktop UI using `scripts/capture-walkthrough.mjs` on 2026-09-01. They show the actual first-run, bundled sample, and source-result states; each is captioned in nearby HTML, so no required text is baked into the image.

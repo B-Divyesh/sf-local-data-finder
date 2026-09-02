@@ -63,6 +63,7 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | Search selected local records with a source trail. | 8 | Pass |
 | Source on GitHub (external) | 4 | Pass |
 | Built by Param Factory · v0.1.10 · build [build id]. | 7 | Pass |
+| The landing artwork was generated for this product. | 8 | Pass |
 
 No row exceeds 22 words. No banned marketing words appear. Product claims in the table map to `.factory/claims.json`; legal, navigational, filename, and code labels are descriptive rather than performance or privacy promises.
 

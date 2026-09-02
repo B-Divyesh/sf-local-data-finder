@@ -61,6 +61,12 @@ describe("published release integrity", () => {
 });
 
 describe("published product copy", () => {
+  it("registers the demo sandbox claim in exactly one test definition", async () => {
+    const tests = await readFile("tests/site.spec.ts", "utf8");
+    const tag = ["@claim", "demo-sandbox"].join(":");
+    expect(tests.split(tag)).toHaveLength(2);
+  });
+
   it("@claim:free-download presents the desktop app as free without a payment gate", async () => {
     const [landing, readme, decision] = await Promise.all([
       readFile("site/index.html", "utf8"),
