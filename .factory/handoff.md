@@ -1,19 +1,12 @@
-# Review 2 handoff — Local Data Finder
+# Polish 2 handoff — Local Data Finder
 
-**Reviewed candidate:** `80ad8c9490cfce0326f3fd5c806af884a88fb6be`
-**Reviewed URL:** `https://local-data-finder.sociobot.in/`
-**Date:** 2 September 2026 UTC
-**Verdict:** **FAIL — 3 minor findings, no blockers**
+**Repair commit:** `8f520fdb837bc13e9d44af99df904d402dccb1d9`  
+**Product URL:** `https://local-data-finder.sociobot.in/`  
+**Status:** all findings fixed; live deployment verification follows below.
 
-No product code was changed. `.factory/review-2.md` records the full adversarial review, all copy word counts, live/demo evidence, clean-clone claim results, and verification of every `review-1.md` finding.
+This closes all three review-2 findings: every public footer labels the GitHub destination as external, the visitor-facing Azure AI provenance claim is removed (with provenance retained in `.factory/design.md`), and the install section names checksum verification in concrete copy. The new regression in `tests/site.spec.ts` covers every public footer plus the install heading/explainer. `.factory/polish-2.md` maps F-2-1 through F-2-3 and every F-1 finding to its current test evidence.
 
-Verified from a fresh clone at `80ad8c9` after the README’s Ubuntu Tauri prerequisites were installed:
-
-- All 27 exact `.factory/claims.json` commands passed.
-- `npm test` passed (7 Vitest, 24 Rust), `npm run test:e2e` passed (42), and `npm run build` produced `dist/app` and `dist/site`.
-- Live desktop and 390 px checks passed the first-read, isolated demo, route-focus, metadata, link, 404, and Axe checks.
-
-Remaining owner work is deliberately limited to the three minor changes in `review-2.md`: label the external GitHub source link, remove or prove the footer’s Azure AI provenance claim, and replace the vague install heading with concrete copy. Re-run the full review after those changes.
+Fresh clone `/tmp/local-data-finder-polish2-mqdKZR/repo` at `8f520fd` completed `npm ci` and every one of the 27 exact `.factory/claims.json` commands successfully. The local complete suite also passes: lint; TypeScript/Cargo check; 7 Vitest and 24 Rust tests; production build; 44/44 Playwright desktop/mobile tests with Axe, privacy, demo, offline, focus, and touch coverage; rustfmt; strict Clippy; and high-severity audit (zero vulnerabilities). Local static evidence is `.factory/qa-artifacts/polish-2-local/verify.json` (652 ms, zero console/page errors).
 
 ---
 
