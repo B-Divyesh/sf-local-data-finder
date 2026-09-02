@@ -1,0 +1,28 @@
+{
+  "sourceBuild": "1eda3be",
+  "githubApiRequestsAcrossTwoLoads": 1,
+  "releaseCacheStored": true,
+  "releaseCacheReused": true,
+  "resolvedDownload": "https://github.com/B-Divyesh/sf-local-data-finder/releases/download/v0.1.10/Local.Data.Finder_0.1.10_amd64.AppImage",
+  "consoleErrors": [],
+  "routesChecked": [
+    "/",
+    "/demo/",
+    "/privacy/",
+    "/terms/",
+    "/404.html"
+  ],
+  "h1PerRoute": 1,
+  "seriousOrCriticalAxeViolations": 0,
+  "horizontalOverflow": false,
+  "generatedImageDisclosurePerRoute": 1,
+  "skipLinkFocused": "main",
+  "minimumAuditedMobileTargetWidth": 57.234375,
+  "minimumAuditedMobileTargetHeight": 46,
+  "overflowAt200PercentZoom": false,
+  "demoRequestOrigins": [
+    "https://local-data-finder.sociobot.in"
+  ],
+  "serviceWorkerCache": "local-data-finder-site-v6",
+  "offlineDemoReload": true
+}
