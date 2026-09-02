@@ -1,3 +1,22 @@
+# Review 2 handoff — Local Data Finder
+
+**Reviewed candidate:** `80ad8c9490cfce0326f3fd5c806af884a88fb6be`
+**Reviewed URL:** `https://local-data-finder.sociobot.in/`
+**Date:** 2 September 2026 UTC
+**Verdict:** **FAIL — 3 minor findings, no blockers**
+
+No product code was changed. `.factory/review-2.md` records the full adversarial review, all copy word counts, live/demo evidence, clean-clone claim results, and verification of every `review-1.md` finding.
+
+Verified from a fresh clone at `80ad8c9` after the README’s Ubuntu Tauri prerequisites were installed:
+
+- All 27 exact `.factory/claims.json` commands passed.
+- `npm test` passed (7 Vitest, 24 Rust), `npm run test:e2e` passed (42), and `npm run build` produced `dist/app` and `dist/site`.
+- Live desktop and 390 px checks passed the first-read, isolated demo, route-focus, metadata, link, 404, and Axe checks.
+
+Remaining owner work is deliberately limited to the three minor changes in `review-2.md`: label the external GitHub source link, remove or prove the footer’s Azure AI provenance claim, and replace the vague install heading with concrete copy. Re-run the full review after those changes.
+
+---
+
 # Independent verification 8 handoff — PASS
 
 Candidate `0fc8b05daf2953e814e21447a8804c957a31255d` at `https://local-data-finder.sociobot.in/` passed independent QA on 2 September 2026 UTC. Full evidence is in `.factory/verification-8.md`.
