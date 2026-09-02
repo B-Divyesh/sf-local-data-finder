@@ -1,4 +1,60 @@
-# Repair 5 handoff — Local Data Finder v0.1.9
+# Final Repair 5 handoff — Local Data Finder v0.1.10
+
+## Outcome
+
+The repair is released and deployed. Exact runtime source `abcf708468919672817484ccf9ea1666e44845fe` is tagged `v0.1.10`; GitHub reports that release as `immutable: true`, and the live site reports `v0.1.10 · build abcf708` at `https://local-data-finder.sociobot.in/`.
+
+- The verifier's skip-link failure was reproduced before repair: first Tab followed by Enter changed the fragment to `#main` but left focus outside the main landmark. Shared route code now makes the target programmatically focusable and transfers focus after activation. `tests/site.spec.ts` covers activation on `/`, `/demo/`, `/privacy/`, `/terms/`, and `/404.html` in desktop and 390 px Chromium.
+- The former `v0.1.8` binary/source mismatch is closed. The released AppImage from `v0.1.10` visibly renders the accepted **Search selected local records** app; screenshot evidence is `.factory/qa-artifacts/repair-5/release-app-v0.1.10.png`.
+- A final controller-policy check found that otherwise-correct `v0.1.9` was not GitHub-locked. Repository immutable releases were enabled through GitHub's official product-scoped endpoint. The workflow now uploads all six binaries, `SHA256SUMS`, and `latest.json` to a draft; validates all eight assets; publishes; and fails unless GitHub returns `immutable: true`.
+- `latest.json` records exact source `abcf708468919672817484ccf9ea1666e44845fe`, version `0.1.10`, six SHA-256 values, and only `/releases/download/v0.1.10/` URLs. npm, Cargo, Tauri, the footer, tests, and service-worker cache `local-data-finder-site-v5` use the same version.
+- The low-severity Rust format and four strict-Clippy findings from verification 7 are repaired without changing passed behavior.
+
+## Clean verification
+
+Fresh clone `/tmp/local-data-finder-repair5-immutable-Pt5wyb/repo` checked out exact source `abcf708` and ran `npm ci` with zero vulnerabilities. Every exact command in all 27 `.factory/claims.json` entries passed. The clone also passed:
+
+- `npm run lint` and `npm run check`.
+- `npm test`: 7 Vitest tests and 24 Rust tests.
+- `npm run build`: both `dist/app` and `dist/site` produced successfully.
+- `npm run test:e2e`: 42/42 across desktop Chromium and 390 px Chromium.
+- `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings`.
+- `npm audit --audit-level=high`: zero vulnerabilities.
+
+The exact clone reused the already-verified Cargo dependency cache after its redundant standalone target exhausted the disposable container disk; all product code was rebuilt and tested from the clean checkout. Production sizes remain within budget: desktop UI JS 18.48 kB raw/6.55 kB gzip; site JS 5.16 kB raw total; site CSS 12.94 kB raw/3.48 kB gzip; mobile hero 21,978 bytes.
+
+## Immutable release evidence
+
+GitHub Actions run `33581304787` completed successfully from `v0.1.10` at `abcf708468919672817484ccf9ea1666e44845fe`. All four platform build jobs and the checksummed publish job passed. Public release `https://github.com/B-Divyesh/sf-local-data-finder/releases/tag/v0.1.10` has eight assets and reports `draft: false`, `prerelease: false`, and `immutable: true`.
+
+| Asset | SHA-256 |
+| --- | --- |
+| macOS ARM64 DMG | `0a3e449035424037b5f95a709085814750e61950dbf6d7b297c0ef87aca0b345` |
+| macOS x64 DMG | `080d56d0c2ae92f5bffbc9a1ab36e8348cc83d0dbeb13a7974f5c9639c39010e` |
+| Linux AppImage | `de69b4dfd0efe229c89143ba289229fe7969f3601988bdc53e02aae9c585d03a` |
+| Linux DEB | `7f424f652a170018e6b87208626d54ebeb32d6ccb3bed2cdc12dd3367da2099e` |
+| Windows MSI | `9c35cb6d20518603b906a38113b9ad404a1f1a9df0b43768fa9a64a8c226c1ae` |
+| Windows EXE | `d17a402edd531c7ec4a5e9924b13707c53afc2414a288029381850ce0835c707` |
+
+All six binaries were downloaded through their manifest URLs and passed the published `SHA256SUMS`. GitHub's own asset digests match. The live shell installer was run with an isolated temporary home, installed the current AppImage, and produced the expected `de69b4df…` checksum.
+
+## Deployment and live verification
+
+`dist/site` built from exact runtime source `abcf708` was deployed only through product-owned Static Web App `sf-local-data-finder` in resource group `sociobot`. Azure deployment `e9420fc6-c0ab-431c-868a-238235f74d73` succeeded at `https://white-sand-0dde41610.7.azurestaticapps.net`; the custom product domain is Ready and returns HTTP 200. No out-of-scope service, product resource, storage, setting, or secret was read or changed.
+
+- `/opt/fleet/lib/verify-url.sh` passed live in 950 ms with correct title, language, one h1, main landmark, alt text, and zero console/page errors. Evidence is under `.factory/qa-artifacts/repair-5/live-v0.1.10/`.
+- `/`, `/demo/`, `/privacy/`, `/terms/`, and `/404.html` passed live at 1366 px and 390 px: HTTP 200, one h1, zero serious/critical Axe findings, zero console/page errors, no overflow, no running reduced-motion animation, and skip activation focused `#main`. A missing route returns the designed page with HTTP 404.
+- The 390 px landing resolver linked directly to the immutable `v0.1.10` Linux AppImage. At 200% text size it had no horizontal overflow. Measured demo touch targets were at least 44 px.
+- A fresh service worker used cache `local-data-finder-site-v5`; `/demo/` reloaded offline in its own browser context. A live demo search made four requests, all same-origin.
+- All 23 public files matched the exact local build byte-for-byte. ETag revalidation returned 304; hashed assets used `max-age=31536000, immutable`.
+- Response headers include HSTS, `nosniff`, `DENY` framing, strict-origin referrer policy, disabled camera/microphone/geolocation, and CSP `frame-ancestors 'none'` with only GitHub's public API added to `connect-src`.
+- Live mobile Lighthouse: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.39 s, TBT 0.5 ms, CLS 0. Raw report: `.factory/qa-artifacts/repair-5/live-v0.1.10/lighthouse.json`.
+
+## Known gaps / operator action
+
+No release-blocking gaps remain. macOS and Windows packages are intentionally unsigned. Signing requires owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX`; the site and README disclose the first-launch warnings.
+
+# Superseded pre-immutability Repair 5 evidence — Local Data Finder v0.1.9
 
 ## Outcome
 
