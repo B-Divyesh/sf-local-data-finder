@@ -60,7 +60,7 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | macOS may require right-click → Open; Windows may show a SmartScreen notice. | 12 | Pass |
 | Checksums are published with every release. | 6 | Pass |
 | Search selected local records with a source trail. | 8 | Pass |
-| Built by Param Factory · v0.1.8 · build [build id] · Hero imagery generated for this product with Azure AI Foundry. | 16 | Pass |
+| Built by Param Factory · v0.1.9 · build [build id] · Hero imagery generated for this product with Azure AI Foundry. | 16 | Pass |
 | Hero imagery generated for this product with Azure AI Foundry. | 10 | Pass |
 
 No row exceeds 22 words. No banned marketing words appear. Product claims in the table map to `.factory/claims.json`; legal, navigational, filename, and code labels are descriptive rather than performance or privacy promises.

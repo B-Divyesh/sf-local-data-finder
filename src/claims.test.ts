@@ -28,13 +28,21 @@ describe("published release integrity", () => {
 
     await run(process.execPath, ["scripts/release-manifest.mjs", directory], {
       cwd: process.cwd(),
-      env: { ...process.env, GITHUB_REF_NAME: "v0.1.6", GITHUB_REPOSITORY: "B-Divyesh/sf-local-data-finder" }
+      env: {
+        ...process.env,
+        GITHUB_REF_NAME: "v0.1.6",
+        GITHUB_REPOSITORY: "B-Divyesh/sf-local-data-finder",
+        GITHUB_SHA: "0123456789abcdef0123456789abcdef01234567"
+      }
     });
 
-    const manifest = JSON.parse(await readFile(join(directory, "latest.json"), "utf8")) as { version: string; assets: Array<{ format: string; sha256: string }> };
+    const manifest = JSON.parse(await readFile(join(directory, "latest.json"), "utf8")) as { version: string; source_commit: string; assets: Array<{ format: string; url: string; sha256: string }> };
     const sums = await readFile(join(directory, "SHA256SUMS"), "utf8");
     expect(manifest.version).toBe("0.1.6");
+    expect(manifest.source_commit).toBe("0123456789abcdef0123456789abcdef01234567");
     expect(manifest.assets).toHaveLength(2);
+    expect(manifest.assets.every((asset) => asset.url.includes("/releases/download/v0.1.6/"))).toBe(true);
+    expect(manifest.assets.every((asset) => !asset.url.includes("/releases/latest/"))).toBe(true);
     expect(manifest.assets.find((asset) => asset.format === "AppImage")?.sha256).toBe(createHash("sha256").update(appImageBytes).digest("hex"));
     expect(sums).toContain(createHash("sha256").update(executableBytes).digest("hex"));
 
