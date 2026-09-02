@@ -1,4 +1,30 @@
-# Review handoff — Local Data Finder
+# Polish 1 handoff — Local Data Finder
+
+## Outcome
+
+Repair commit `18ccae6dcbef4e94fa92dc0fec94b2c9652f28c1` closes every finding in `.factory/review-1.md`. It is pushed to `main` and the static product is deployed at `https://local-data-finder.sociobot.in/` (live footer: build `18ccae6`). The complete finding-by-finding mapping is in `.factory/polish-1.md`.
+
+The repair adds an isolated `/?demo=1` entry path, focused and announced route transitions, five missing claims with direct tests, clearer privacy text, direct command labels, and mobile/live regression coverage. The product retains its luminous archive-landscape visual system.
+
+## Verification
+
+- Fresh clone: `/tmp/local-data-finder-clean-t3C7H3` from `18ccae6`; `npm ci` passed.
+- Every exact command in all 27 `.factory/claims.json` entries passed from that clean clone.
+- `npm test` passed (7 Vitest + 24 Rust); `npm run check`, `npm run build`, `npm run build:site`, `npm run test:e2e` (40 desktop/mobile tests), and `npm audit --audit-level=high` passed.
+- Cold live check passed: `verify-url.sh` reported 870 ms load, title/lang/one h1/main/alt/button checks, and no console/page errors.
+- Live 390 px Axe checks found zero serious/critical issues for `/`, `/?demo=1`, `/privacy/`, `/terms/`, and the real 404. All measured `scrollWidth: 390`.
+- Live `/?demo=1` redirected to `/demo/?demo=1` with the demo banner, Reset demo, and Start for real. The live route check focused the Demo h1 and announced `Demo — Local Data Finder`.
+
+## Deployment
+
+`dist/site` was deployed through the product-owned Static Web App `sf-local-data-finder` on 2 September 2026. Azure confirmed deployment at `https://white-sand-0dde41610.7.azurestaticapps.net`; the custom domain serves the same build.
+
+## Known gaps / operator action
+
+- macOS and Windows artifacts remain intentionally unsigned. Signing needs owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX` before a signed release can be produced.
+- The fully enabled v0.1 app remains free until a registered Sociobot billing product is available; the decision is documented in `.factory/monetization.md`.
+
+# Earlier review history
 
 ## Independent review 1 — FAIL
 
