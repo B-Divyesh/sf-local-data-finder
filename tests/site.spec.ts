@@ -59,6 +59,18 @@ test("secondary routes retain navigation, social metadata, touch icon, and build
   }
 });
 
+test("public footers identify the external source link and the install section explains checksum verification", async ({ page }) => {
+  for (const route of ["/", "/demo/", "/privacy/", "/terms/", "/404.html"]) {
+    await page.goto(route);
+    const source = page.locator('.site-footer a[href="https://github.com/B-Divyesh/sf-local-data-finder"]');
+    await expect(source).toHaveAccessibleName("Source on GitHub (external)");
+  }
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 2, name: "Install with a verified command" })).toBeVisible();
+  await expect(page.getByText("Each installer checks its SHA256 before it installs the app.")).toBeVisible();
+  await expect(page.locator(".site-footer")).not.toContainText("Azure AI Foundry");
+});
+
 test("320px landing and 404 footer stay within the viewport", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   for (const route of ["/", "/404.html"]) {

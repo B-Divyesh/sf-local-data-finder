@@ -1,1 +1,1 @@
-Find original records in selected local notes and exports without uploading your archive.
+Find source records in selected local notes and exports without uploading your archive.

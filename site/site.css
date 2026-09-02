@@ -594,6 +594,12 @@ h1 em {
   text-align: center;
   padding-top: 80px;
 }
+.install-explainer {
+  max-width: 42ch;
+  margin: 0.4rem auto 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
 .commands {
   display: grid;
   grid-template-columns: 1fr 1fr;

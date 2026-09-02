@@ -56,6 +56,7 @@ describe("published release integrity", () => {
     expect(workflow).toContain("draft: true");
     expect(workflow).toContain("names.length !== 8");
     expect(workflow).toContain("!published.immutable");
+    expect(await readFile("site/index.html", "utf8")).toContain("Each installer checks its SHA256 before it installs the app.");
   });
 });
 

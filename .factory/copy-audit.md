@@ -51,7 +51,8 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | Encrypt extracted text and paths at rest. | 7 | Pass |
 | The password stays only for the current app session. | 9 | Pass |
 | Install from a terminal | 4 | Pass |
-| Install in one verified step. | 5 | Pass |
+| Install with a verified command | 5 | Pass |
+| Each installer checks its SHA256 before it installs the app. | 10 | Pass |
 | macOS / Linux | 2 | Pass |
 | Windows PowerShell | 2 | Pass |
 | Copy macOS/Linux command | 3 | Pass |
@@ -60,8 +61,8 @@ Every visitor-visible sentence, heading, action, caption, fact, and disclosure i
 | macOS may require right-click → Open; Windows may show a SmartScreen notice. | 12 | Pass |
 | Checksums are published with every release. | 6 | Pass |
 | Search selected local records with a source trail. | 8 | Pass |
-| Built by Param Factory · v0.1.10 · build [build id] · Hero imagery generated for this product with Azure AI Foundry. | 16 | Pass |
-| Hero imagery generated for this product with Azure AI Foundry. | 10 | Pass |
+| Source on GitHub (external) | 4 | Pass |
+| Built by Param Factory · v0.1.10 · build [build id]. | 7 | Pass |
 
 No row exceeds 22 words. No banned marketing words appear. Product claims in the table map to `.factory/claims.json`; legal, navigational, filename, and code labels are descriptive rather than performance or privacy promises.
 
