@@ -1,3 +1,23 @@
+# Independent verification 9 handoff — FAIL
+
+Candidate `17178e68cfae38e4bf05e375d2b1a920338027f1` at `https://local-data-finder.sociobot.in/` **FAILS** independent acceptance QA on 2 September 2026 UTC. Full evidence is in `.factory/verification-9.md`. No product code was modified.
+
+The application itself works: all 27 declared claim commands pass; `npm test` passes 7 Vitest and 24 Rust tests; lint, TypeScript/Cargo check, rustfmt, strict Clippy, audit, and the production build pass. A fresh checksummed Linux AppImage loads five isolated sample records, finds three `MAPLE-742` sources with paths/timestamps, and removes the demo artifacts on **Start for real**. The live candidate matches all 23 candidate site files, has no serious/critical Axe findings or valid-route console errors, reloads the demo offline, and scores 99/100/100/100 in mobile Lighthouse.
+
+Release blocker:
+
+- The landing fetches GitHub release metadata on every load and does not implement the installer contract's one-hour `localStorage` cache. Two consecutive live loads produced two API requests and no stored cache entry.
+
+Additional findings to repair before reverification:
+
+- `@claim:demo-sandbox` tags two separate test definitions; the claims contract requires exactly one.
+- Generated hero imagery is documented internally but has no required visitor-facing disclosure on an About page or footer.
+- The first full Playwright run failed one 44 px assertion at `43.99998474121094`; five focused repeats and a second 44/44 run passed. Add layout margin or a safe float tolerance so the gate is deterministic.
+
+Next verification should rerun every exact claim command first, then the full clean gate set, two consecutive landing loads to prove cache reuse, generated-image disclosure, and repeated 390 px touch-target coverage.
+
+---
+
 # Polish 2 handoff — Local Data Finder
 
 **Repair commit:** `8f520fdb837bc13e9d44af99df904d402dccb1d9`  
