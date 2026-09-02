@@ -41,3 +41,12 @@
 - `/opt/fleet/lib/verify-url.sh https://local-data-finder.sociobot.in/ .factory/qa-artifacts/polish-2-live` passed in 838 ms. Its `verify.json` records the expected title, `lang`, one h1, main landmark, alt text, labelled buttons, and no errors.
 - The live recheck opened `/`, `/demo/?demo=1`, `/privacy/`, `/terms/`, and `/404.html` in 1366 px and 390 px Chromium. Every route had one h1, no horizontal overflow, zero serious/critical Axe violations, the external GitHub label, and no Azure provenance copy.
 - Live header navigation focused the destination h1 and announced `Demo — Local Data Finder`. The direct demo showed its persistent isolation banner; **Reset demo** restored `MAPLE-742`. `/not-a-page` returned HTTP 404.
+
+## Round-2 retry evidence
+
+**Verification commit:** `daa885d831843995adf111b73a5175f9d641bea8`
+**Clean checkout:** `/tmp/local-data-finder-round2-clean-8rIFlD/repo`
+
+The current disk-guard environment completed a fresh-clone retest after installing the Ubuntu Tauri packages documented in `README.md`. `npm ci` reported zero vulnerabilities. All 27 exact commands listed in `.factory/claims.json` passed, including the direct `?demo=1` sample path, demo reset and isolation, same-origin privacy requests, offline reload in a dedicated context, source-trail coverage, selected-source boundaries, encryption, CSV export, and release-platform selection.
+
+The same clean checkout passed `npm run lint`, `npm run check`, `npm test` (7 Vitest and 24 Rust tests), `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `npm run build`, `npm run test:e2e` (44/44 desktop and mobile Chromium tests), and `npm audit --audit-level=high`. The fresh static build passed `verify-url.sh` locally with title, language, one h1, main landmark, alt text, labelled buttons, and zero console/page errors. Playwright's pinned Axe coverage passed in the 44-test browser suite; the standalone Axe CLI could not launch its unavailable Chrome binary in this image.
