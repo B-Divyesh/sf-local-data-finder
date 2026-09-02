@@ -1,3 +1,58 @@
+# Repair 5 handoff — Local Data Finder v0.1.9
+
+## Outcome
+
+All release-blocking findings in `.factory/verification-7.md` are repaired. Runtime source commit `befa05e47f82a027f3acfca6573dabcf2fcec39f` is tagged `v0.1.9`, released for every required platform, and deployed at `https://local-data-finder.sociobot.in/`. The live footer reports `v0.1.9 · build befa05e`.
+
+- The skip-link failure was reproduced before repair. After the first Tab and Enter, Playwright reported `#main` as inactive. Shared route code now makes the fragment target programmatically focusable and transfers focus after activation. `tests/site.spec.ts` asserts the URL fragment and focused `#main` across `/`, `/demo/`, `/privacy/`, `/terms/`, and `/404.html` in both browser projects.
+- The prior `v0.1.8` release came from `61db921`, not the accepted candidate. Release `v0.1.9` comes from exact runtime source `befa05e47f82a027f3acfca6573dabcf2fcec39f`. `latest.json` records that source commit and uses only immutable `/releases/download/v0.1.9/` asset URLs.
+- Version metadata is `0.1.9` in npm, Cargo, Tauri, and the static footer. Service-worker cache `local-data-finder-site-v4` forces the repaired shell to replace the previous cached shell.
+- Rust formatting and all strict Clippy findings noted by verification 7 were also repaired without changing product behavior.
+
+## Clean verification
+
+Clean clone `/tmp/local-data-finder-repair5-clean-sbBRzG/repo` checked out exact source `befa05e` and ran `npm ci` with zero vulnerabilities. Every exact command in all 27 `.factory/claims.json` entries passed. The same clone passed:
+
+- `npm run lint` and `npm run check`.
+- `npm test`: 7 Vitest and 24 Rust tests.
+- `npm run build`: `dist/app` and `dist/site` produced successfully.
+- `npm run test:e2e`: 42/42 across desktop Chromium and 390 px Chromium.
+- `npm audit --audit-level=high`: zero vulnerabilities.
+- `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings`.
+
+Production sizes remain within budget: desktop UI JS 18.48 kB raw/6.55 kB gzip; site JS 5.16 kB raw in total; site CSS 12.94 kB raw/3.48 kB gzip; mobile hero 21,978 bytes.
+
+## Release evidence
+
+GitHub Actions run `33579451416` completed successfully from `v0.1.9` at `befa05e47f82a027f3acfca6573dabcf2fcec39f`. Release `https://github.com/B-Divyesh/sf-local-data-finder/releases/tag/v0.1.9` contains:
+
+| Asset | SHA-256 |
+| --- | --- |
+| macOS ARM64 DMG | `b0b48b1e9ed3fa53ace7c79f730d67092fafe3728929f939fed0a3c8f06c73e4` |
+| macOS x64 DMG | `f3e6342f4e79d13863526baf1e46f28d5d0591efb733b2aec810df8c89502efd` |
+| Linux AppImage | `057e883ebc7acedbba055125682bfb0298ee2eb5a209f501eff4400014572171` |
+| Linux DEB | `d0071580ce2e068b7e0da0f0108ca002ab3a3d683cecf7ed6e8365adabf19af4` |
+| Windows MSI | `b07882b84aafd1571e7cf98d67d60c0f942fca6d71b3bc8ee3caa4a3083863da` |
+| Windows EXE | `66d4b9f661648ca079047661a9ba6faba7440aa4a82de0780ae7c13776aeda37` |
+
+All six assets were freshly downloaded from their manifest URLs and passed `sha256sum -c SHA256SUMS`. Every URL returned successfully. The live shell installer was run with an isolated temporary home, installed the AppImage, and produced checksum `057e883e…`. The released AppImage stayed running under Xvfb and visibly rendered **Search selected local records**; evidence is `.factory/qa-artifacts/repair-5/release-app-v0.1.9.png`.
+
+## Deployment and live verification
+
+`dist/site` from exact runtime source `befa05e` was deployed through product-owned Static Web App `sf-local-data-finder` in resource group `sociobot`. Azure deployment `ab8f4b21-328f-4fd1-828c-555925d98bba` succeeded at `https://white-sand-0dde41610.7.azurestaticapps.net`; the product domain serves the same build. No other service or product resource was read or changed.
+
+- `/opt/fleet/lib/verify-url.sh` passed live in 1,007 ms with no console/page errors, correct title/lang/one h1/main/alt checks, and desktop/mobile screenshots under `.factory/qa-artifacts/repair-5/live/`.
+- All five routes passed live Playwright Axe at desktop and 390 px with zero serious/critical findings. Each had one h1, no horizontal overflow, no running reduced-motion animation, and skip-link activation focused `#main`.
+- The live landing button resolved to the real `v0.1.9` Linux AppImage. The current GitHub API release is `v0.1.9`.
+- A fresh service worker updated to cache `local-data-finder-site-v4`; `/demo/` then reloaded offline. A demo search made four requests, all same-origin.
+- All 23 served files matched local `dist/site` byte-for-byte. Missing routes return the designed page with HTTP 404. ETag revalidation returns 304. Hashed assets serve `max-age=31536000, immutable`.
+- Live headers include HSTS, `nosniff`, `DENY` framing, strict-origin referrer policy, disabled camera/microphone/geolocation, and the expected CSP with `frame-ancestors 'none'` and only GitHub's public API in `connect-src`.
+- Live mobile Lighthouse: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 0.9 s, TBT 70 ms, CLS 0. Raw report: `.factory/qa-artifacts/repair-5/live/lighthouse.json`.
+
+## Known gaps / operator action
+
+No release-blocking gaps remain. macOS and Windows packages are intentionally unsigned. Signing requires owner-provided `APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX`; the site and README disclose the first-launch warnings.
+
 # Verification handoff — Local Data Finder
 
 ## Independent verification 7 — FAIL
