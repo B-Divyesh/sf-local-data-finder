@@ -2,11 +2,13 @@
 
 **Repair commit:** `8f520fdb837bc13e9d44af99df904d402dccb1d9`  
 **Product URL:** `https://local-data-finder.sociobot.in/`  
-**Status:** all findings fixed; live deployment verification follows below.
+**Status:** PASS — all review findings fixed and rechecked live.
 
 This closes all three review-2 findings: every public footer labels the GitHub destination as external, the visitor-facing Azure AI provenance claim is removed (with provenance retained in `.factory/design.md`), and the install section names checksum verification in concrete copy. The new regression in `tests/site.spec.ts` covers every public footer plus the install heading/explainer. `.factory/polish-2.md` maps F-2-1 through F-2-3 and every F-1 finding to its current test evidence.
 
 Fresh clone `/tmp/local-data-finder-polish2-mqdKZR/repo` at `8f520fd` completed `npm ci` and every one of the 27 exact `.factory/claims.json` commands successfully. The local complete suite also passes: lint; TypeScript/Cargo check; 7 Vitest and 24 Rust tests; production build; 44/44 Playwright desktop/mobile tests with Axe, privacy, demo, offline, focus, and touch coverage; rustfmt; strict Clippy; and high-severity audit (zero vulnerabilities). Local static evidence is `.factory/qa-artifacts/polish-2-local/verify.json` (652 ms, zero console/page errors).
+
+`dist/site` was deployed only to the owned Static Web App `sf-local-data-finder` in resource group `sociobot`. Azure deployment `75cf1e3e-561b-44f3-903c-2aa358bb565d` succeeded; a cold custom-domain response reports build `e66a768` and HTTP 200. `/opt/fleet/lib/verify-url.sh` passed live in 838 ms (`.factory/qa-artifacts/polish-2-live/verify.json`) with no console/page errors. I then rechecked `/`, `/demo/?demo=1`, `/privacy/`, `/terms/`, and `/404.html` in desktop and 390 px Chromium: zero serious/critical Axe violations, no overflow, correct footer labels, no public Azure provenance claim, focused/announced header navigation, and a resettable direct demo. `/not-a-page` returns HTTP 404.
 
 ---
 

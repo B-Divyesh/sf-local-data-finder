@@ -1,7 +1,7 @@
 # Polish 2 — zero-finding closure
 
 **Repair commit:** `8f520fdb837bc13e9d44af99df904d402dccb1d9`  
-**Deployment target:** `https://local-data-finder.sociobot.in/`  
+**Deployed URL:** `https://local-data-finder.sociobot.in/`  
 **Checked:** 2 September 2026 UTC
 
 ## Review 2 findings
@@ -34,4 +34,10 @@
 - Playwright’s Axe integration covers the landing and demo at both viewports with zero serious/critical violations. It also covers demo storage isolation, same-origin privacy requests, service-worker offline reload in a fresh context, keyboard focus, and 44 px touch targets.
 - `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4180/ .factory/qa-artifacts/polish-2-local` passed in 652 ms: correct title/language/one h1/main/alt/button checks and no console/page errors.
 
-Live deployment evidence is recorded in `.factory/handoff.md` after the product-owned static deployment completes.
+## Deployment and cold live recheck
+
+`dist/site` from the repair record was deployed only to the product-owned `sf-local-data-finder` Static Web App in resource group `sociobot`. Azure deployment `75cf1e3e-561b-44f3-903c-2aa358bb565d` succeeded. A cold response from the custom domain returned build `e66a768`, HTTP 200, the expected CSP/security headers, and no console/page errors.
+
+- `/opt/fleet/lib/verify-url.sh https://local-data-finder.sociobot.in/ .factory/qa-artifacts/polish-2-live` passed in 838 ms. Its `verify.json` records the expected title, `lang`, one h1, main landmark, alt text, labelled buttons, and no errors.
+- The live recheck opened `/`, `/demo/?demo=1`, `/privacy/`, `/terms/`, and `/404.html` in 1366 px and 390 px Chromium. Every route had one h1, no horizontal overflow, zero serious/critical Axe violations, the external GitHub label, and no Azure provenance copy.
+- Live header navigation focused the destination h1 and announced `Demo — Local Data Finder`. The direct demo showed its persistent isolation banner; **Reset demo** restored `MAPLE-742`. `/not-a-page` returned HTTP 404.
